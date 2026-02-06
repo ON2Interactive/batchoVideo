@@ -465,62 +465,80 @@ const App: React.FC<AppProps> = ({ initialProject, onBackToDashboard }) => {
     setShowExportDialog(false);
     if (!stageRef.current) return;
     try {
+      console.log('🎬 Export started:', config);
       setIsExporting(true);
       setExportProgress(0);
       setStatusText("Initializing Export...");
       const stage = stageRef.current;
-      const pixelRatio = config.targetWidth / activePage.width;
+
       if (config.format === 'png') {
+        const pixelRatio = config.targetWidth / activePage.width;
         const uri = stage.toDataURL({ pixelRatio });
         const link = document.createElement('a');
         link.download = `${projectName.replace(/\s+/g, '-')}-${config.label}.png`;
         link.href = uri;
         link.click();
         setIsExporting(false);
+        console.log('✅ PNG export complete');
         return;
       }
-      const originalScale = stage.scale();
-      const originalSize = { w: stage.width(), h: stage.height() };
-      stage.width(activePage.width * pixelRatio);
-      stage.height(activePage.height * pixelRatio);
-      stage.scale({ x: pixelRatio, y: pixelRatio });
+
+      // VIDEO EXPORT
+      console.log('📹 Starting video export...');
       setStatusText("Synchronizing Frames...");
+
+      // Reset all videos to start
       const seekLayers = activePage.layers.map(l => {
         if (l.type === LayerType.IMAGE && (l as ImageLayer).mediaType === 'video') return { ...l, currentTime: 0, playing: false };
         return l;
       });
       setEditorState(prev => ({ ...prev, pages: prev.pages.map(p => p.id === activePage.id ? { ...p, layers: seekLayers as Layer[] } : p) }));
       await new Promise(resolve => setTimeout(resolve, 2000));
+      console.log('✅ Videos synchronized');
 
-      // Get main canvas - Konva.Animation in CanvasElement keeps it updating for videos
+      // Get canvas WITHOUT resizing stage (Chrome issue)
       const canvas = stage.container().querySelector('canvas');
       if (!canvas) throw new Error("Canvas missing");
+      console.log('📊 Canvas size:', canvas.width, 'x', canvas.height);
 
       const stream = canvas.captureStream(30);
+      console.log('📹 Stream created, tracks:', stream.getTracks().length);
+
       const mimeType = MediaRecorder.isTypeSupported('video/mp4') ? 'video/mp4' : 'video/webm';
+      console.log('📹 Using MIME type:', mimeType);
+
       const recorder = new MediaRecorder(stream, { mimeType, videoBitsPerSecond: config.targetWidth > 2000 ? 25000000 : 8000000 });
       const chunks: Blob[] = [];
-      recorder.ondataavailable = (e) => chunks.push(e.data);
+
+      recorder.ondataavailable = (e) => {
+        console.log('📦 Data chunk received:', e.data.size, 'bytes');
+        chunks.push(e.data);
+      };
+
       recorder.onstop = () => {
-        stage.width(originalSize.w);
-        stage.height(originalSize.h);
-        stage.scale(originalScale);
+        console.log('🛑 Recorder stopped, total chunks:', chunks.length);
         const blob = new Blob(chunks, { type: mimeType });
+        console.log('📦 Final blob size:', blob.size, 'bytes');
         const url = URL.createObjectURL(blob);
         const link = document.createElement('a');
         link.download = `${projectName.replace(/\s+/g, '-')}-${config.label}.${mimeType.includes('mp4') ? 'mp4' : 'webm'}`;
         link.href = url;
         link.click();
         setIsExporting(false);
+        console.log('✅ Export complete!');
       };
+
       setStatusText("Recording Scene...");
       recorder.start();
+      console.log('🎬 Recording started');
 
+      // Start playing videos
       const playLayers = seekLayers.map(l => {
         if (l.type === LayerType.IMAGE && (l as ImageLayer).mediaType === 'video') { const { currentTime, ...rest } = l as ImageLayer; return { ...rest, playing: true }; }
         return l;
       });
       setEditorState(prev => ({ ...prev, pages: prev.pages.map(p => p.id === activePage.id ? { ...p, layers: playLayers as Layer[] } : p) }));
+      console.log('▶️ Videos playing');
 
       const duration = config.duration;
       let elapsed = 0;
@@ -530,11 +548,12 @@ const App: React.FC<AppProps> = ({ initialProject, onBackToDashboard }) => {
         setExportProgress(Math.min(100, (elapsed / duration) * 100));
         if (elapsed >= duration) {
           clearInterval(timer);
+          console.log('⏱️ Duration reached, stopping recorder');
           recorder.stop();
         }
       }, 100);
     } catch (err) {
-      console.error(err);
+      console.error('❌ Export failed:', err);
       setIsExporting(false);
       alert("Export failed.");
     }
