@@ -1,5 +1,7 @@
 import React from 'react';
 import { ArrowRight, Video, Layers, Type, Download, Cloud, Zap, Play, Sparkles } from 'lucide-react';
+import Navigation from './components/Navigation';
+import Footer from './components/Footer';
 
 interface NewLandingPageProps {
     onStartEditing: () => void;
@@ -18,25 +20,7 @@ const NewLandingPage: React.FC<NewLandingPageProps> = ({ onStartEditing }) => {
             </div>
 
             {/* Navigation */}
-            <nav className="relative z-50 flex items-center justify-between px-8 py-6 max-w-7xl mx-auto">
-                <div className="h-8">
-                    <img src="/batchoVideo.svg" alt="batchoVideo" className="h-full" />
-                </div>
-                <div className="flex items-center gap-8">
-                    <a href="#features" className="text-sm text-zinc-400 hover:text-white transition-colors">
-                        Features
-                    </a>
-                    <a href="#pricing" className="text-sm text-zinc-400 hover:text-white transition-colors">
-                        Pricing
-                    </a>
-                    <button
-                        onClick={onStartEditing}
-                        className="px-6 py-2.5 bg-white text-black rounded-full text-sm font-semibold hover:scale-105 transition-transform"
-                    >
-                        Create Now
-                    </button>
-                </div>
-            </nav>
+            <Navigation onGetStarted={onStartEditing} />
 
             {/* Hero Section */}
             <section className="relative z-10 px-8 pt-24 pb-32 max-w-7xl mx-auto">
@@ -77,7 +61,7 @@ const NewLandingPage: React.FC<NewLandingPageProps> = ({ onStartEditing }) => {
             {/* Product Showcase */}
             <section id="features" className="relative z-10 px-8 py-24 max-w-7xl mx-auto">
                 <div className="text-center mb-16">
-                    <h2 className="text-4xl lg:text-5xl font-bold mb-4">Professional Video Editing</h2>
+                    <h2 className="text-4xl lg:text-5xl font-bold mb-4">Design on Canvas</h2>
                     <p className="text-zinc-400 text-lg">
                         Marketing · Social Media · Presentations · Tutorials
                     </p>
@@ -289,16 +273,7 @@ const NewLandingPage: React.FC<NewLandingPageProps> = ({ onStartEditing }) => {
             </section>
 
             {/* Footer */}
-            <footer className="relative z-10 border-t border-zinc-800/50 px-8 py-16">
-                <div className="max-w-7xl mx-auto">
-                    <div className="h-8 mb-8">
-                        <img src="/batchoVideo.svg" alt="batchoVideo" className="h-full" />
-                    </div>
-                    <div className="text-sm text-zinc-600">
-                        © 2025 BatchoVideo. Crafted for video excellence.
-                    </div>
-                </div>
-            </footer>
+            <Footer />
         </div>
     );
 };
