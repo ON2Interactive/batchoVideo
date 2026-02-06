@@ -512,17 +512,38 @@ const App: React.FC<AppProps> = ({ initialProject, onBackToDashboard }) => {
       };
       setStatusText("Recording Scene...");
       recorder.start();
+
       const playLayers = seekLayers.map(l => {
         if (l.type === LayerType.IMAGE && (l as ImageLayer).mediaType === 'video') { const { currentTime, ...rest } = l as ImageLayer; return { ...rest, playing: true }; }
         return l;
       });
       setEditorState(prev => ({ ...prev, pages: prev.pages.map(p => p.id === activePage.id ? { ...p, layers: playLayers as Layer[] } : p) }));
+
       const duration = config.duration;
       let elapsed = 0;
+
+      // Chrome-specific fix: Continuous drawing loop
+      // Chrome's MediaRecorder requires active canvas updates to capture frames
+      const animate = () => {
+        if (elapsed >= duration) {
+          recorder.stop();
+          return;
+        }
+
+        // Force canvas redraw by triggering a stage update
+        // This ensures Chrome captures each frame
+        stage.batchDraw();
+
+        requestAnimationFrame(animate);
+      };
+
+      // Start the continuous drawing loop
+      requestAnimationFrame(animate);
+
       const timer = setInterval(() => {
         elapsed += 100;
         setExportProgress(Math.min(100, (elapsed / duration) * 100));
-        if (elapsed >= duration) { clearInterval(timer); recorder.stop(); }
+        if (elapsed >= duration) { clearInterval(timer); }
       }, 100);
     } catch (err) {
       console.error(err);
