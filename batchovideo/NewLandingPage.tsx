@@ -137,8 +137,123 @@ const NewLandingPage: React.FC<NewLandingPageProps> = ({ onStartEditing }) => {
                 </div>
             </section>
 
+            {/* Why BatchoVideo Section */}
+            <section className="relative z-10 px-8 py-24 max-w-4xl mx-auto">
+                <div className="space-y-16">
+                    <div>
+                        <h2 className="text-4xl lg:text-5xl font-bold mb-6">Why BatchoVideo?</h2>
+                        <p className="text-zinc-300 text-lg leading-relaxed">
+                            Most video editing tools force you through complex timelines and endless menus. BatchoVideo removes that friction.
+                            With canvas-based editing and intuitive layer controls, you get professional results without the tedious manual work.
+                            Every video is crafted with precision, while still giving you full creative control when you need it.
+                            BatchoVideo turns hours of editing into just a few clicks.
+                        </p>
+                    </div>
+
+                    <div>
+                        <h2 className="text-4xl lg:text-5xl font-bold mb-6">Built for Creators</h2>
+                        <p className="text-zinc-300 text-lg leading-relaxed">
+                            BatchoVideo was built to solve a real problem: content creators, marketers, and educators were wasting countless hours
+                            making the same edits across multiple videos. No tool truly streamlined video creation while offering intelligent,
+                            targeted control. We created BatchoVideo to bridge that gap — a fast, reliable editor that handles the repetitive work,
+                            adapts to your creative needs, and scales effortlessly with your workflow.
+                        </p>
+                    </div>
+                </div>
+            </section>
+
+            {/* Users/Testimonials Section */}
+            <section className="relative z-10 px-8 py-24 max-w-7xl mx-auto">
+                <h2 className="text-4xl lg:text-5xl font-bold text-center mb-16">Users</h2>
+                <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-8">
+                    {[
+                        {
+                            quote: "BatchoVideo completely transformed our content workflow. What used to take hours now takes seconds — and looks even better.",
+                            author: "Maya",
+                            role: "Marketing Agency"
+                        },
+                        {
+                            quote: "As a small creator, I couldn't afford expensive software. BatchoVideo gives me studio-quality videos whenever I need them.",
+                            author: "Daniel",
+                            role: "YouTube Creator"
+                        },
+                        {
+                            quote: "Our social media posts instantly looked more premium. The consistent edits noticeably improved engagement and conversions.",
+                            author: "Aisha",
+                            role: "E-commerce Brand"
+                        },
+                        {
+                            quote: "I run a content agency — BatchoVideo saves me so much time. I can generate on-brand visuals for clients in minutes.",
+                            author: "Chris",
+                            role: "Content Agency"
+                        },
+                        {
+                            quote: "BatchoVideo makes even quick screen recordings look professionally edited. It's like having a video editor in my pocket.",
+                            author: "Lena",
+                            role: "Course Creator"
+                        },
+                        {
+                            quote: "Our entire product line finally has a unified, high-end look across our videos and ads. Zero manual retouching needed.",
+                            author: "Oliver",
+                            role: "Product Brand"
+                        }
+                    ].map((testimonial, idx) => (
+                        <div key={idx} className="space-y-4">
+                            <p className="text-zinc-300 text-base leading-relaxed">
+                                "{testimonial.quote}"
+                            </p>
+                            <p className="text-zinc-500 text-sm">
+                                — {testimonial.author} • {testimonial.role}
+                            </p>
+                        </div>
+                    ))}
+                </div>
+            </section>
+
+            {/* FAQs Section */}
+            <section className="relative z-10 px-8 py-24 max-w-4xl mx-auto">
+                <h2 className="text-4xl lg:text-5xl font-bold text-center mb-16">FAQs</h2>
+                <div className="space-y-8">
+                    {[
+                        {
+                            question: "What is BatchoVideo?",
+                            answer: "BatchoVideo is a canvas-based video editor that lets you layer videos, add text, and create professional content quickly and intuitively."
+                        },
+                        {
+                            question: "Do I need video editing experience to use it?",
+                            answer: "No. The canvas interface is intuitive and designed for creators of all skill levels. You can start creating professional videos immediately."
+                        },
+                        {
+                            question: "Can I export in different formats?",
+                            answer: "Yes. BatchoVideo supports multiple export formats and resolutions, optimized for social media, presentations, and web use."
+                        },
+                        {
+                            question: "Are my videos stored permanently?",
+                            answer: "Your projects are saved in your account so you can return to them later. You have full control over your content."
+                        },
+                        {
+                            question: "What types of videos work best with BatchoVideo?",
+                            answer: "Anything — tutorials, social media content, presentations, marketing videos, and more. BatchoVideo is versatile and adapts to your needs."
+                        },
+                        {
+                            question: "Will BatchoVideo get better over time?",
+                            answer: "Yes. We continuously improve the editor with new features, better performance, and enhanced capabilities based on user feedback."
+                        },
+                        {
+                            question: "How many videos can I create?",
+                            answer: "It depends on your plan. Our free tier lets you experiment, while premium plans offer unlimited projects and exports."
+                        }
+                    ].map((faq, idx) => (
+                        <div key={idx} className="space-y-3">
+                            <h3 className="text-xl font-semibold text-white">{faq.question}</h3>
+                            <p className="text-zinc-300 leading-relaxed">{faq.answer}</p>
+                        </div>
+                    ))}
+                </div>
+            </section>
+
             {/* Pricing Section */}
-            <section id="pricing" className="relative z-10 px-8 py-32 max-w-6xl mx-auto">
+            <section id="pricing" className="relative z-10 px-8 py-24 max-w-7xl mx-auto">
                 <div className="text-center mb-16">
                     <h2 className="text-4xl lg:text-5xl font-bold mb-4">Simple, Transparent Pricing</h2>
                     <p className="text-zinc-400 text-lg">

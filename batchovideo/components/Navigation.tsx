@@ -30,8 +30,6 @@ const Navigation: React.FC<NavigationProps> = ({ onGetStarted }) => {
             borderBottom: '1px solid rgba(255, 255, 255, 0.05)',
         }}>
             <div style={{
-                maxWidth: '1400px',
-                margin: '0 auto',
                 padding: '1rem 2rem',
                 display: 'flex',
                 justifyContent: 'space-between',
