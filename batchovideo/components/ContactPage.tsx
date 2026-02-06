@@ -35,7 +35,7 @@ const ContactPage: React.FC = () => {
                 <div className="max-w-4xl mx-auto space-y-16">
                     {/* Header */}
                     <div className="text-center space-y-4">
-                        <h1 className="text-5xl lg:text-6xl font-bold tracking-tight">
+                        <h1 className="text-[24px] md:text-5xl lg:text-6xl font-bold tracking-tight">
                             Get in Touch
                         </h1>
                         <p className="text-xl text-zinc-400 max-w-2xl mx-auto">

@@ -28,10 +28,10 @@ const NewLandingPage: React.FC<NewLandingPageProps> = ({ onStartEditing }) => {
                     {/* Left: Text Content */}
                     <div className="space-y-8">
                         <div className="space-y-2">
-                            <h1 className="text-6xl lg:text-7xl font-bold leading-[1.1] tracking-tight">
+                            <h1 className="text-[24px] md:text-6xl lg:text-7xl font-bold leading-[1.1] tracking-tight">
                                 Design Video on Canvas.
                             </h1>
-                            <h1 className="text-6xl lg:text-7xl font-bold leading-[1.1] tracking-tight text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-purple-500">
+                            <h1 className="text-[24px] md:text-6xl lg:text-7xl font-bold leading-[1.1] tracking-tight text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-purple-500">
                                 Export Clean MP4s.
                             </h1>
                         </div>
@@ -76,7 +76,7 @@ const NewLandingPage: React.FC<NewLandingPageProps> = ({ onStartEditing }) => {
             {/* Product Showcase */}
             <section id="features" className="relative z-10 px-8 py-24 max-w-7xl mx-auto">
                 <div className="text-center mb-16">
-                    <h2 className="text-4xl lg:text-5xl font-bold mb-4">Design on Canvas</h2>
+                    <h2 className="text-[18px] md:text-4xl lg:text-5xl font-bold mb-4">Design on Canvas</h2>
                     <p className="text-zinc-400 text-lg">
                         Layers · Scenes · Aspect Ratios · MP4 Export
                     </p>
@@ -156,7 +156,7 @@ const NewLandingPage: React.FC<NewLandingPageProps> = ({ onStartEditing }) => {
             <section className="relative z-10 px-8 py-24 max-w-4xl mx-auto">
                 <div className="space-y-16">
                     <div>
-                        <h2 className="text-4xl lg:text-5xl font-bold mb-6">Why BatchoVideo?</h2>
+                        <h2 className="text-[18px] md:text-4xl lg:text-5xl font-bold mb-6">Why BatchoVideo?</h2>
                         <p className="text-zinc-300 text-lg leading-relaxed">
                             Most video editing tools force you through complex timelines and endless menus. BatchoVideo removes that friction.
                             With canvas-based editing and intuitive layer controls, you get professional results without the tedious manual work.
@@ -166,7 +166,7 @@ const NewLandingPage: React.FC<NewLandingPageProps> = ({ onStartEditing }) => {
                     </div>
 
                     <div>
-                        <h2 className="text-4xl lg:text-5xl font-bold mb-6">Built for Creators</h2>
+                        <h2 className="text-[18px] md:text-4xl lg:text-5xl font-bold mb-6">Built for Creators</h2>
                         <p className="text-zinc-300 text-lg leading-relaxed">
                             BatchoVideo was built to solve a real problem: content creators, marketers, and educators were wasting countless hours
                             making the same edits across multiple videos. No tool truly streamlined video creation while offering intelligent,
@@ -179,7 +179,7 @@ const NewLandingPage: React.FC<NewLandingPageProps> = ({ onStartEditing }) => {
 
             {/* Users/Testimonials Section */}
             <section className="relative z-10 px-8 py-24 max-w-7xl mx-auto">
-                <h2 className="text-4xl lg:text-5xl font-bold text-center mb-16">Users</h2>
+                <h2 className="text-[18px] md:text-4xl lg:text-5xl font-bold text-center mb-16">Users</h2>
                 <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-8">
                     {[
                         {
@@ -227,7 +227,7 @@ const NewLandingPage: React.FC<NewLandingPageProps> = ({ onStartEditing }) => {
 
             {/* FAQs Section */}
             <section className="relative z-10 px-8 py-24 max-w-4xl mx-auto">
-                <h2 className="text-4xl lg:text-5xl font-bold text-center mb-16">FAQs</h2>
+                <h2 className="text-[18px] md:text-4xl lg:text-5xl font-bold text-center mb-16">FAQs</h2>
                 <div className="space-y-8">
                     {[
                         {
@@ -270,7 +270,7 @@ const NewLandingPage: React.FC<NewLandingPageProps> = ({ onStartEditing }) => {
             {/* Pricing Section */}
             <section id="pricing" className="relative z-10 px-8 py-24 max-w-7xl mx-auto">
                 <div className="text-center mb-16">
-                    <h2 className="text-4xl lg:text-5xl font-bold mb-4">Simple, Transparent Pricing</h2>
+                    <h2 className="text-[18px] md:text-4xl lg:text-5xl font-bold mb-4">Simple, Transparent Pricing</h2>
                     <p className="text-zinc-400 text-lg">
                         No subscriptions. No expiring credits. Pay once, use anytime.
                     </p>
