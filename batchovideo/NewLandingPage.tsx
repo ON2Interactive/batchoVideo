@@ -23,8 +23,8 @@ const NewLandingPage: React.FC<NewLandingPageProps> = ({ onStartEditing }) => {
             <Navigation onGetStarted={onStartEditing} />
 
             {/* Hero Section */}
-            <section className="relative z-10 px-8 pt-24 pb-32 max-w-7xl mx-auto">
-                <div className="grid lg:grid-cols-2 gap-16 items-center">
+            <section className="relative z-10 px-8 pt-24 pb-32 max-w-7xl mx-auto min-h-[1100px] flex items-center">
+                <div className="grid lg:grid-cols-2 gap-16 items-center w-full">
                     {/* Left: Text Content */}
                     <div className="space-y-8">
                         <h1 className="text-6xl lg:text-7xl font-bold leading-[1.1] tracking-tight">

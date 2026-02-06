@@ -39,7 +39,7 @@ const Navigation: React.FC<NavigationProps> = ({ onGetStarted }) => {
                 <div
                     onClick={() => handleNavigation('/')}
                     style={{
-                        height: '28px',
+                        height: '20px',
                         cursor: 'pointer',
                         display: 'flex',
                         alignItems: 'center',
