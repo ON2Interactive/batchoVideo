@@ -636,12 +636,14 @@ const App: React.FC<AppProps> = ({ initialProject, onBackToDashboard }) => {
 
       <header className="h-14 border-b border-zinc-800 flex items-center justify-between px-6 bg-zinc-900 z-20 shadow-lg">
         <div className="flex items-center gap-6">
-          <button
-            onClick={() => setView('landing')}
-            className="p-2 hover:bg-zinc-800 rounded text-zinc-500 hover:text-white transition-colors"
-          >
-            <ChevronLeft size={18} />
-          </button>
+          {onBackToDashboard && (
+            <button
+              onClick={onBackToDashboard}
+              className="p-2 hover:bg-zinc-800 rounded text-zinc-500 hover:text-white transition-colors"
+            >
+              <ChevronLeft size={18} />
+            </button>
+          )}
 
           <div className="text-xl font-black tracking-tighter text-white flex items-center pr-6 border-r border-zinc-800 pointer-events-none select-none">
             batcho<span className="text-blue-500">Video</span>
