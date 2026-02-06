@@ -491,9 +491,16 @@ const App: React.FC<AppProps> = ({ initialProject, onBackToDashboard }) => {
       });
       setEditorState(prev => ({ ...prev, pages: prev.pages.map(p => p.id === activePage.id ? { ...p, layers: seekLayers as Layer[] } : p) }));
       await new Promise(resolve => setTimeout(resolve, 2000));
-      const canvas = stage.container().querySelector('canvas');
-      if (!canvas) throw new Error("Canvas missing");
-      const stream = canvas.captureStream(30);
+
+      // Create dedicated export canvas for Chrome compatibility
+      const exportCanvas = document.createElement('canvas');
+      exportCanvas.width = activePage.width * pixelRatio;
+      exportCanvas.height = activePage.height * pixelRatio;
+      const exportCtx = exportCanvas.getContext('2d');
+      if (!exportCtx) throw new Error("Could not create export canvas context");
+
+      // Use export canvas stream instead of main canvas
+      const stream = exportCanvas.captureStream(30);
       const mimeType = MediaRecorder.isTypeSupported('video/mp4') ? 'video/mp4' : 'video/webm';
       const recorder = new MediaRecorder(stream, { mimeType, videoBitsPerSecond: config.targetWidth > 2000 ? 25000000 : 8000000 });
       const chunks: Blob[] = [];
@@ -522,7 +529,7 @@ const App: React.FC<AppProps> = ({ initialProject, onBackToDashboard }) => {
       const duration = config.duration;
       let elapsed = 0;
 
-      // Chrome-specific fix: Continuous drawing loop
+      // Chrome-specific fix: Continuous frame copying to export canvas
       // Chrome's MediaRecorder requires active canvas updates to capture frames
       const animate = () => {
         if (elapsed >= duration) {
@@ -530,9 +537,10 @@ const App: React.FC<AppProps> = ({ initialProject, onBackToDashboard }) => {
           return;
         }
 
-        // Force canvas redraw by triggering a stage update
-        // This ensures Chrome captures each frame
-        stage.batchDraw();
+        // Copy current frame from stage to export canvas
+        // This is the key fix for Chrome - it needs continuous drawing to the export canvas
+        const frameCanvas = stage.toCanvas({ pixelRatio });
+        exportCtx.drawImage(frameCanvas, 0, 0);
 
         requestAnimationFrame(animate);
       };
