@@ -53,7 +53,7 @@ const NewLandingPage: React.FC<NewLandingPageProps> = ({ onStartEditing }) => {
 
                     {/* Right: Visual Demo / Video Placeholder */}
                     <div className="relative">
-                        <div className="aspect-video bg-zinc-900/50 backdrop-blur border border-zinc-800 rounded-xl overflow-hidden shadow-2xl">
+                        <div className="aspect-video bg-zinc-900/50 backdrop-blur border border-zinc-800 rounded-[4px] overflow-hidden shadow-2xl">
                             {/* Placeholder for future video - configured to fill container */}
                             <div className="w-full h-full bg-black relative">
                                 <video
