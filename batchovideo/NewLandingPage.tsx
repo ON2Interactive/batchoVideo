@@ -55,13 +55,16 @@ const NewLandingPage: React.FC<NewLandingPageProps> = ({ onStartEditing }) => {
                     <div className="relative">
                         <div className="aspect-video bg-zinc-900/50 backdrop-blur border border-zinc-800 rounded-xl overflow-hidden shadow-2xl">
                             {/* Placeholder for future video - configured to fill container */}
-                            <div className="w-full h-full bg-gradient-to-br from-zinc-900 via-zinc-900 to-black flex items-center justify-center relative">
-                                <div className="absolute inset-0 bg-[linear-gradient(rgba(255,255,255,0.02)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.02)_1px,transparent_1px)] bg-[size:32px_32px]" />
-                                {/* User said they will provide a video to fill, so keeping this structure ready */}
-                                <div className="text-center p-8">
-                                    <Play size={64} className="text-zinc-700 mx-auto mb-4" />
-                                    <p className="text-zinc-600 text-sm">Demo Video Placeholder</p>
-                                </div>
+                            <div className="w-full h-full bg-black relative">
+                                <video
+                                    src="/demo.mp4"
+                                    className="w-full h-full object-cover"
+                                    autoPlay
+                                    loop
+                                    muted
+                                    playsInline
+                                />
+                                <div className="absolute inset-0 bg-[linear-gradient(rgba(255,255,255,0.02)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.02)_1px,transparent_1px)] bg-[size:32px_32px] pointer-events-none" />
                             </div>
                         </div>
                         {/* Subtle glow */}
