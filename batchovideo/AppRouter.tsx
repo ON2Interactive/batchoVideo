@@ -9,7 +9,10 @@ import { AdminDashboard } from './components/Admin/AdminDashboard';
 import { AdminLoginPage } from './components/Auth/AdminLoginPage';
 import { adminHelpers } from './lib/supabase';
 
-type View = 'landing' | 'login' | 'signup' | 'dashboard' | 'editor' | 'admin' | 'adminLogin';
+import { useLocation } from 'react-router-dom';
+import ContactPage from './components/ContactPage';
+
+type View = 'landing' | 'login' | 'signup' | 'dashboard' | 'editor' | 'admin' | 'adminLogin' | 'contact';
 
 const AppRouter: React.FC = () => {
     const [view, setView] = useState<View>('landing');
@@ -17,34 +20,63 @@ const AppRouter: React.FC = () => {
     const [currentProject, setCurrentProject] = useState<any>(null);
     const [isAdmin, setIsAdmin] = useState(false);
     const [isAdminAuthenticated, setIsAdminAuthenticated] = useState(false);
+    const location = useLocation();
 
     useEffect(() => {
         checkAuth();
         checkAdminAuth();
-
-        // Handle URL-based routing
-        const handleRouteChange = () => {
-            const path = window.location.pathname;
-            if (path === '/admin' && !isAdminAuthenticated) {
-                setView('adminLogin');
-            }
-        };
-
-        window.addEventListener('popstate', handleRouteChange);
-        return () => window.removeEventListener('popstate', handleRouteChange);
     }, [isAdminAuthenticated]);
+
+    useEffect(() => {
+        // Sync view with URL path
+        const path = location.pathname;
+        if (path === '/contact') {
+            setView('contact');
+        } else if (path === '/' && view !== 'landing') {
+            // Only switch to landing if we're not authenticated? 
+            // Actually checkAuth handles initial load. 
+            // But if user navigates BACK to home...
+            // Sticky logic: checkAuth determines if meaningful session exists.
+            // If session, '/' usually redirects to dashboard?
+            // Existing logic: checkAuth -> if session -> dashboard.
+            // But if I want to see landing page?
+            // Usually landing is for public.
+            // Let's keep existing logic but handle explicit routes
+        } else if (path === '/signin') {
+            setView('login');
+        } else if (path === '/signup') {
+            setView('signup');
+        } else if (path === '/admin') {
+            setView('adminLogin');
+        }
+    }, [location.pathname]);
 
     const checkAuth = async () => {
         const session = await authHelpers.getSession();
+        const path = window.location.pathname;
+
         if (session) {
-            // Check if user is admin
             const adminStatus = await adminHelpers.isUserAdmin(session.user.id);
             setIsAdmin(adminStatus);
-            setView('dashboard');
+
+            // Allow public pages even if logged in?
+            if (path === '/contact') {
+                setView('contact');
+            } else if (path === '/') {
+                // Maybe logged in users should see dashboard?
+                setView('dashboard');
+            } else {
+                setView('dashboard');
+            }
         } else {
-            // Check if accessing admin route
-            if (window.location.pathname === '/admin') {
+            if (path === '/admin') {
                 setView('adminLogin');
+            } else if (path === '/contact') {
+                setView('contact');
+            } else if (path === '/signin') {
+                setView('login');
+            } else if (path === '/signup') {
+                setView('signup');
             } else {
                 setView('landing');
             }
@@ -113,6 +145,10 @@ const AppRouter: React.FC = () => {
                 <div>Loading...</div>
             </div>
         );
+    }
+
+    if (view === 'contact') {
+        return <ContactPage />;
     }
 
     if (view === 'landing') {
