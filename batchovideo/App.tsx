@@ -542,12 +542,29 @@ const App: React.FC<AppProps> = ({ initialProject, onBackToDashboard }) => {
 
       const duration = config.duration;
       let elapsed = 0;
+      let isRecording = true;
+
+      // CRITICAL: Force continuous canvas redraw for Chrome MediaRecorder
+      // Chrome needs active canvas updates to capture frames
+      const forceRedraw = () => {
+        if (!isRecording) return;
+
+        // Force Konva to redraw the canvas
+        stage.batchDraw();
+
+        requestAnimationFrame(forceRedraw);
+      };
+
+      // Start the continuous redraw loop
+      requestAnimationFrame(forceRedraw);
+      console.log('🔄 Continuous redraw started');
 
       const timer = setInterval(() => {
         elapsed += 100;
         setExportProgress(Math.min(100, (elapsed / duration) * 100));
         if (elapsed >= duration) {
           clearInterval(timer);
+          isRecording = false; // Stop the redraw loop
           console.log('⏱️ Duration reached, stopping recorder');
           recorder.stop();
         }
