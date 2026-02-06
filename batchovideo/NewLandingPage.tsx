@@ -23,7 +23,7 @@ const NewLandingPage: React.FC<NewLandingPageProps> = ({ onStartEditing }) => {
             <Navigation onGetStarted={onStartEditing} />
 
             {/* Hero Section */}
-            <section className="relative z-10 px-8 pt-24 pb-32 max-w-7xl mx-auto min-h-[800px] flex items-center">
+            <section className="relative z-10 px-8 pt-[100px] pb-[100px] max-w-7xl mx-auto min-h-[800px] flex items-center">
                 <div className="grid lg:grid-cols-2 gap-16 items-center w-full">
                     {/* Left: Text Content */}
                     <div className="space-y-8">
@@ -48,13 +48,6 @@ const NewLandingPage: React.FC<NewLandingPageProps> = ({ onStartEditing }) => {
                                 Start Creating
                                 <ArrowRight size={20} className="group-hover:translate-x-1 transition-transform" />
                             </button>
-
-                            <div className="space-y-2">
-                                <p className="text-white font-semibold tracking-wide">Design on Canvas</p>
-                                <p className="text-zinc-500 text-sm tracking-wide">
-                                    Layers · Scenes · Aspect Ratios · MP4 Export
-                                </p>
-                            </div>
                         </div>
                     </div>
 
@@ -82,7 +75,7 @@ const NewLandingPage: React.FC<NewLandingPageProps> = ({ onStartEditing }) => {
                 <div className="text-center mb-16">
                     <h2 className="text-4xl lg:text-5xl font-bold mb-4">Design on Canvas</h2>
                     <p className="text-zinc-400 text-lg">
-                        Marketing · Social Media · Presentations · Tutorials
+                        Layers · Scenes · Aspect Ratios · MP4 Export
                     </p>
                 </div>
 
