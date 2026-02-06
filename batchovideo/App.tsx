@@ -29,7 +29,8 @@ import ProModal from './components/Modals/ProModal';
 import AIModal from './components/Modals/AIModal';
 
 import { aiService } from './aiService';
-import { db } from './db';
+import { dbHelpers, authHelpers } from './lib/supabase';
+// import { db } from './db'; // Removing IDB dependency for Project saving
 import {
   Download,
   Undo2,
@@ -61,7 +62,6 @@ const App: React.FC<AppProps> = ({ initialProject, onBackToDashboard }) => {
     };
   }, []);
 
-
   // --- Project Management State ---
   const [projectId, setProjectId] = useState<string>(uuidv4());
   const [projectName, setProjectName] = useState<string>('Untitled Design');
@@ -73,8 +73,43 @@ const App: React.FC<AppProps> = ({ initialProject, onBackToDashboard }) => {
   const [showAIModal, setShowAIModal] = useState(false);
   const [aiLayerId, setAILayerId] = useState<string | null>(null);
 
+  // New State for Supabase Integration
+  const [userId, setUserId] = useState<string | null>(null);
+  const [isNewProject, setIsNewProject] = useState(true);
+
+  // Initialize User
+  useEffect(() => {
+    authHelpers.getCurrentUser().then(user => {
+      if (user) setUserId(user.id);
+    });
+  }, []);
+
+  // Initialize from Prop (Supabase Data)
+  useEffect(() => {
+    if (initialProject) {
+      setProjectId(initialProject.id);
+      setProjectName(initialProject.name || 'Untitled Project');
+
+      // Handle Supabase structure (editor_state) vs potential legacy structure
+      const loadedPages = initialProject.editor_state?.pages || initialProject.pages;
+
+      if (loadedPages) {
+        setEditorState(prev => ({
+          ...prev,
+          pages: loadedPages,
+          activePageId: loadedPages[0]?.id || DEFAULT_PAGE_ID,
+          history: [loadedPages],
+          historyIndex: 0
+        }));
+      }
+      setIsNewProject(false);
+    }
+  }, [initialProject]);
+
+
   // --- Editor State ---
   const [editorState, setEditorState] = useState<EditorState>(() => {
+    // ... existing init logic ...
     const storedPro = localStorage.getItem('vd_pro_status') === 'true';
 
     const initialPage: Page = {
@@ -99,7 +134,7 @@ const App: React.FC<AppProps> = ({ initialProject, onBackToDashboard }) => {
     };
   });
 
-  // --- Tool & UI State ---
+  // ... Tool & UI State ...
   const [activeTool, setActiveTool] = useState<string>('select');
   const [isExporting, setIsExporting] = useState(false);
   const [isGenerating, setIsGenerating] = useState(false);
@@ -122,39 +157,106 @@ const App: React.FC<AppProps> = ({ initialProject, onBackToDashboard }) => {
     setEditorState(prev => ({ ...prev, isPro: true }));
   };
 
-  const handleSaveProject = async () => {
+  // --- Supabase Save Logic ---
+  const handleSaveProject = useCallback(async () => {
+    if (!userId) {
+      console.warn("Cannot save: No authenticated user");
+      return;
+    }
+
     try {
       setIsSaving(true);
-      const project: Project = {
-        id: projectId,
-        name: projectName,
-        pages: editorState.pages,
-        updatedAt: Date.now(),
-        thumbnail: editorState.pages[0]?.thumbnail
-      };
-      await db.saveProject(project);
+      const thumbnail = editorState.pages[0]?.thumbnail;
+
+      let result;
+      if (isNewProject) {
+        result = await dbHelpers.saveProject(userId, projectName, editorState, thumbnail);
+        if (result.data) {
+          setProjectId(result.data.id);
+          setIsNewProject(false);
+          console.log("Project created:", result.data.id);
+        }
+      } else {
+        result = await dbHelpers.updateProject(projectId, projectName, editorState, thumbnail);
+        console.log("Project updated:", projectId);
+      }
+
+      if (result.error) throw result.error;
       setLastSaved(Date.now());
     } catch (err) {
-      console.error('Failed to save:', err);
+      console.error('Failed to save to Supabase:', err);
+      // Fallback or error notification?
     } finally {
       setTimeout(() => setIsSaving(false), 800);
     }
-  };
+  }, [userId, projectId, projectName, editorState, isNewProject]);
+
+  // --- Autosave Implementation (30s) ---
+  // Use a ref to access latest state in interval without resetting timer
+  const autosaveRef = useRef({ userId, projectId, projectName, editorState, isNewProject });
+  useEffect(() => {
+    autosaveRef.current = { userId, projectId, projectName, editorState, isNewProject };
+  }, [userId, projectId, projectName, editorState, isNewProject]);
+
+  useEffect(() => {
+    const timer = setInterval(() => {
+      const current = autosaveRef.current;
+      if (!current.userId) return;
+
+      // Silent save logic (duplicated to avoid prop drilling / complex callback deps)
+      const performAutosave = async () => {
+        // Don't set isSaving to true to avoid UI spinner flicker every 30s?
+        // Or keep it to show activity. Let's keep it.
+        // Actually, if I call handleSaveProject directly it won't use the LATEST ref values if I invoke it from here?
+        // No, handleSaveProject is a callback. 
+        // So I should replicate the save logic using `current` ref values.
+
+        try {
+          // setIsSaving(true); // Optional: skip spinner for autosave
+          const thumbnail = current.editorState.pages[0]?.thumbnail;
+
+          if (current.isNewProject) {
+            const result = await dbHelpers.saveProject(current.userId, current.projectName, current.editorState, thumbnail);
+            if (result.data) {
+              setProjectId(result.data.id);
+              setIsNewProject(false);
+            }
+          } else {
+            await dbHelpers.updateProject(current.projectId, current.projectName, current.editorState, thumbnail);
+          }
+          setLastSaved(Date.now());
+        } catch (e) { console.error("Autosave error:", e); }
+        // finally {setIsSaving(false); }
+      };
+
+      console.log("Triggering Autosave...");
+      performAutosave();
+
+    }, 30000); // 30 seconds
+
+    return () => clearInterval(timer);
+  }, []); // Run once on mount
 
   const handleLoadProject = async (id: string) => {
     try {
-      const project = await db.getProject(id);
+      const { data: project, error } = await dbHelpers.getProject(id);
       if (project) {
         setProjectId(project.id);
         setProjectName(project.name);
-        setEditorState(prev => ({
-          ...prev,
-          pages: project.pages,
-          activePageId: project.pages[0]?.id || DEFAULT_PAGE_ID,
-          selectedLayerId: null,
-          history: [project.pages],
-          historyIndex: 0
-        }));
+
+        // Handle Supabase structure (editor_state)
+        const loadedPages = project.editor_state?.pages || project.pages;
+
+        if (loadedPages) {
+          setEditorState(prev => ({
+            ...prev,
+            pages: loadedPages,
+            activePageId: loadedPages[0]?.id || DEFAULT_PAGE_ID,
+            selectedLayerId: null,
+            history: [loadedPages],
+            historyIndex: 0
+          }));
+        }
         setShowGallery(false);
       }
     } catch (err) {

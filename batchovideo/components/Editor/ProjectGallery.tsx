@@ -1,7 +1,7 @@
 
 import React, { useEffect, useState } from 'react';
 import { ProjectMetadata } from '../../types';
-import { db } from '../../db';
+import { dbHelpers, authHelpers } from '../../lib/supabase';
 import { X, Clock, Trash2, FolderOpen, Search } from 'lucide-react';
 
 interface Props {
@@ -20,8 +20,23 @@ const ProjectGallery: React.FC<Props> = ({ onClose, onLoadProject }) => {
 
   const loadProjects = async () => {
     try {
-      const data = await db.getAllProjects();
-      setProjects(data.sort((a, b) => b.updatedAt - a.updatedAt));
+      const user = await authHelpers.getCurrentUser();
+      if (!user) return; // Or show error
+
+      const { data, error } = await dbHelpers.getUserProjects(user.id);
+      if (error) throw error;
+
+      if (data) {
+        // Map Supabase rows to ProjectMetadata
+        const mapped: ProjectMetadata[] = data.map((p: any) => ({
+          id: p.id,
+          name: p.name,
+          thumbnail: p.thumbnail,
+          updatedAt: new Date(p.updated_at).getTime(), // Supabase returns ISO string
+          pages: p.editor_state?.pages || [] // Optional if needed for gallery
+        }));
+        setProjects(mapped);
+      }
     } catch (err) {
       console.error(err);
     } finally {
@@ -32,12 +47,17 @@ const ProjectGallery: React.FC<Props> = ({ onClose, onLoadProject }) => {
   const handleDelete = async (e: React.MouseEvent, id: string) => {
     e.stopPropagation();
     if (confirm('Are you sure you want to delete this project?')) {
-      await db.deleteProject(id);
-      loadProjects();
+      const { error } = await dbHelpers.deleteProject(id);
+      if (error) {
+        console.error('Delete failed:', error);
+        alert('Failed to delete project. You may not have permission or there was a network error.');
+      } else {
+        loadProjects();
+      }
     }
   };
 
-  const filteredProjects = projects.filter(p => 
+  const filteredProjects = projects.filter(p =>
     p.name.toLowerCase().includes(search.toLowerCase())
   );
 
@@ -54,7 +74,7 @@ const ProjectGallery: React.FC<Props> = ({ onClose, onLoadProject }) => {
               <p className="text-xs text-zinc-500 font-medium">{projects.length} designs stored</p>
             </div>
           </div>
-          
+
           {/* Completed missing search and close controls */}
           <div className="flex items-center gap-4 flex-1 max-w-md ml-auto relative">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-zinc-500" size={16} />
@@ -66,7 +86,7 @@ const ProjectGallery: React.FC<Props> = ({ onClose, onLoadProject }) => {
               className="w-full bg-zinc-800 border-zinc-700 rounded-lg pl-10 pr-4 py-2 text-sm text-white focus:outline-none focus:border-blue-500 transition-colors"
             />
           </div>
-          
+
           <button onClick={onClose} className="p-2 hover:bg-zinc-800 rounded-lg text-zinc-400 hover:text-white transition-colors ml-4">
             <X size={20} />
           </button>
@@ -108,7 +128,7 @@ const ProjectGallery: React.FC<Props> = ({ onClose, onLoadProject }) => {
                     )}
                     <div className="absolute inset-0 bg-blue-600/0 group-hover:bg-blue-600/10 transition-colors pointer-events-none" />
                   </div>
-                  
+
                   <div className="p-4 flex flex-col gap-3">
                     <div className="flex items-start justify-between gap-2">
                       <h3 className="font-bold text-sm text-white truncate group-hover:text-blue-400 transition-colors">{project.name}</h3>
@@ -119,7 +139,7 @@ const ProjectGallery: React.FC<Props> = ({ onClose, onLoadProject }) => {
                         <Trash2 size={14} />
                       </button>
                     </div>
-                    
+
                     <div className="flex items-center gap-2 text-[10px] text-zinc-500 font-bold uppercase tracking-wider">
                       <Clock size={12} />
                       {new Date(project.updatedAt).toLocaleDateString()}

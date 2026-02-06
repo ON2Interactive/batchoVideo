@@ -1,5 +1,7 @@
 import React, { useState } from 'react';
 import { Mail, MessageSquare, Send } from 'lucide-react';
+import { dbHelpers } from '../lib/supabase';
+import { useRecaptcha } from '../hooks/useRecaptcha';
 import Navigation from './Navigation';
 import Footer from './Footer';
 
@@ -11,13 +13,33 @@ const ContactPage: React.FC = () => {
     });
     const [submitted, setSubmitted] = useState(false);
 
-    const handleSubmit = (e: React.FormEvent) => {
+    const { executeRecaptcha } = useRecaptcha();
+
+    const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
-        // In a real app, send data to backend here
-        console.log('Form submitted:', formData);
-        setSubmitted(true);
-        setTimeout(() => setSubmitted(false), 3000); // Reset after 3s
-        setFormData({ name: '', email: '', message: '' });
+
+        const token = await executeRecaptcha('CONTACT');
+        if (!token) {
+            alert("Verification failed. Please try again.");
+            return;
+        }
+
+        try {
+            await dbHelpers.sendEmail({
+                to: formData.email,
+                subject: 'New Contact Form Submission',
+                message: formData.message,
+                type: 'contact',
+                // token: token // Pass to backend if verification enabled
+            });
+
+            setSubmitted(true);
+            setTimeout(() => setSubmitted(false), 3000);
+            setFormData({ name: '', email: '', message: '' });
+        } catch (error) {
+            console.error("Failed to send email:", error);
+            alert("Failed to send message. Please try again.");
+        }
     };
 
     return (
@@ -134,6 +156,9 @@ const ContactPage: React.FC = () => {
                                     )}
                                 </button>
                             </form>
+                            <p className="text-zinc-500 text-[11px] text-center mt-4">
+                                This site is protected by reCAPTCHA and the Google <a href="https://policies.google.com/privacy" className="underline hover:text-zinc-400">Privacy Policy</a> and <a href="https://policies.google.com/terms" className="underline hover:text-zinc-400">Terms of Service</a> apply.
+                            </p>
                         </div>
                     </div>
                 </div>

@@ -114,6 +114,23 @@ export const dbHelpers = {
             .eq('id', projectId);
         return { error };
     },
+
+    async getProject(projectId: string) {
+        const { data, error } = await supabase
+            .from('projects')
+            .select('*')
+            .eq('id', projectId)
+            .single();
+        return { data, error };
+    },
+
+    async sendEmail(payload: { to: string, subject: string, message: string, type: 'contact' | 'signup' }) {
+        const { data, error } = await supabase.functions.invoke('send-email', {
+            body: payload
+        });
+        if (error) throw error;
+        return data;
+    },
 };
 
 // Storage helper functions

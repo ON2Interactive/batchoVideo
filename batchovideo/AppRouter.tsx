@@ -11,8 +11,9 @@ import { adminHelpers } from './lib/supabase';
 
 import { useLocation } from 'react-router-dom';
 import ContactPage from './components/ContactPage';
+import AboutPage from './components/AboutPage';
 
-type View = 'landing' | 'login' | 'signup' | 'dashboard' | 'editor' | 'admin' | 'adminLogin' | 'contact';
+type View = 'landing' | 'login' | 'signup' | 'dashboard' | 'editor' | 'admin' | 'adminLogin' | 'contact' | 'about';
 
 const AppRouter: React.FC = () => {
     const [view, setView] = useState<View>('landing');
@@ -42,6 +43,8 @@ const AppRouter: React.FC = () => {
             setView('signup');
         } else if (path === '/admin') {
             setView('adminLogin');
+        } else if (path === '/about') {
+            setView('about');
         }
     }, [location.pathname]);
 
@@ -56,6 +59,8 @@ const AppRouter: React.FC = () => {
             // Allow public pages even if logged in
             if (path === '/contact') {
                 setView('contact');
+            } else if (path === '/about') {
+                setView('about');
             } else if (path === '/') {
                 setView('landing');
             } else if (path === '/dashboard') {
@@ -74,6 +79,8 @@ const AppRouter: React.FC = () => {
                 setView('adminLogin');
             } else if (path === '/contact') {
                 setView('contact');
+            } else if (path === '/about') {
+                setView('about');
             } else if (path === '/signin') {
                 setView('login');
             } else if (path === '/signup') {
@@ -108,29 +115,35 @@ const AppRouter: React.FC = () => {
     };
 
     const handleLoginSuccess = () => {
+        window.history.pushState({}, '', '/dashboard');
         setView('dashboard');
     };
 
     const handleSignupSuccess = () => {
+        window.history.pushState({}, '', '/dashboard');
         setView('dashboard');
     };
 
     const handleLogout = () => {
+        window.history.pushState({}, '', '/signin');
         setView('login');
         setCurrentProject(null);
     };
 
     const handleNewProject = () => {
         setCurrentProject(null);
+        window.history.pushState({}, '', '/editor');
         setView('editor');
     };
 
     const handleLoadProject = (project: any) => {
         setCurrentProject(project);
+        window.history.pushState({}, '', `/editor/${project.id}`);
         setView('editor');
     };
 
     const handleBackToDashboard = () => {
+        window.history.pushState({}, '', '/dashboard');
         setView('dashboard');
         setCurrentProject(null);
     };
@@ -154,9 +167,13 @@ const AppRouter: React.FC = () => {
         return <ContactPage />;
     }
 
+    if (view === 'about') {
+        return <AboutPage />;
+    }
+
     if (view === 'landing') {
         return (
-            <NewLandingPage onStartEditing={() => setView('login')} />
+            <NewLandingPage onStartEditing={() => setView('signup')} />
         );
     }
 

@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { authHelpers } from '../../lib/supabase';
+import { useRecaptcha } from '../../hooks/useRecaptcha';
 
 interface LoginPageProps {
     onSuccess: () => void;
@@ -12,10 +13,20 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onSuccess, onSwitchToSignu
     const [error, setError] = useState('');
     const [loading, setLoading] = useState(false);
 
+    const { executeRecaptcha } = useRecaptcha();
+
     const handleLogin = async (e: React.FormEvent) => {
         e.preventDefault();
         setError('');
         setLoading(true);
+
+        // Execute ReCaptcha
+        const token = await executeRecaptcha('LOGIN');
+        if (!token) {
+            setError('Verification failed. Please try again.');
+            setLoading(false);
+            return;
+        }
 
         const { data, error: authError } = await authHelpers.signIn(email, password);
 
@@ -135,6 +146,18 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onSuccess, onSwitchToSignu
                         {loading ? 'Signing in...' : 'Sign In'}
                     </button>
                 </form>
+
+                <p style={{
+                    color: '#666',
+                    fontSize: '11px',
+                    marginTop: '15px',
+                    textAlign: 'center',
+                    lineHeight: '1.4'
+                }}>
+                    This site is protected by reCAPTCHA and the Google
+                    <a href="https://policies.google.com/privacy" style={{ color: '#888', textDecoration: 'underline', margin: '0 4px' }}>Privacy Policy</a> and
+                    <a href="https://policies.google.com/terms" style={{ color: '#888', textDecoration: 'underline', margin: '0 4px' }}>Terms of Service</a> apply.
+                </p>
 
                 <div style={{ marginTop: '20px', textAlign: 'center' }}>
                     <p style={{ color: '#888', fontSize: '14px' }}>

@@ -4,6 +4,7 @@ import { Rect, Circle, Text, Image as KonvaImage, Transformer, Star } from 'reac
 import { Layer, LayerType, ImageLayer, TextLayer, ShapeLayer, Page } from '../../types';
 import { useVideo } from '../../hooks/useVideo';
 import Konva from 'konva';
+import { getEffectConfig } from '../../constants/videoEffects';
 
 interface Props {
   layer: Layer;
@@ -17,35 +18,35 @@ interface Props {
 
 const SNAP_THRESHOLD = 5;
 
-const CanvasElement: React.FC<Props> = ({ 
-  layer, 
-  isSelected, 
-  onSelect, 
-  onChange, 
-  page, 
+const CanvasElement: React.FC<Props> = ({
+  layer,
+  isSelected,
+  onSelect,
+  onChange,
+  page,
   onDragMove,
-  onEditingChange 
+  onEditingChange
 }) => {
   const shapeRef = useRef<any>(null);
   const trRef = useRef<Konva.Transformer>(null);
   const [isEditing, setIsEditing] = useState(false);
   const [editingValue, setEditingValue] = useState('');
-  
+
   const isVideo = layer.type === LayerType.IMAGE && (layer as ImageLayer).mediaType === 'video';
   const isImage = layer.type === LayerType.IMAGE && (layer as ImageLayer).mediaType === 'image';
 
-  const videoElement = isVideo 
+  const videoElement = isVideo
     ? useVideo(
-        (layer as ImageLayer).src, 
-        (layer as ImageLayer).playing, 
-        (layer as ImageLayer).loop, 
-        (layer as ImageLayer).volume,
-        (layer as ImageLayer).currentTime
-      ) 
+      (layer as ImageLayer).src,
+      (layer as ImageLayer).playing,
+      (layer as ImageLayer).loop,
+      (layer as ImageLayer).volume,
+      (layer as ImageLayer).currentTime
+    )
     : null;
 
   const [imageElement, setImageElement] = useState<HTMLImageElement | null>(null);
-  
+
   useEffect(() => {
     if (isImage) {
       const img = new window.Image();
@@ -61,11 +62,27 @@ const CanvasElement: React.FC<Props> = ({
       const node = shapeRef.current;
       const layerNode = node.getLayer();
       if (!layerNode) return;
-      const anim = new Konva.Animation(() => {}, layerNode);
+
+      const anim = new Konva.Animation(() => {
+        // If filter is active, we must re-cache to update the frame for the filter to apply
+        if ((layer as ImageLayer).filter && (layer as ImageLayer).filter !== 'none') {
+          try {
+            node.cache();
+          } catch (e) {
+            // Handle cache errors (e.g. 0 dimensions)
+          }
+        } else {
+          node.clearCache();
+        }
+      }, layerNode);
+
       anim.start();
-      return () => { anim.stop(); };
+      return () => {
+        anim.stop();
+        node.clearCache();
+      };
     }
-  }, [videoElement]);
+  }, [videoElement, (layer as ImageLayer).filter]);
 
   useEffect(() => {
     if (isSelected && trRef.current && shapeRef.current && !isEditing && !layer.locked) {
@@ -153,13 +170,13 @@ const CanvasElement: React.FC<Props> = ({
       const textNode = shapeRef.current;
       const stage = textNode.getStage();
       const container = stage.container();
-      
+
       const area = document.createElement('textarea');
       container.appendChild(area);
-      
+
       const absPos = textNode.getAbsolutePosition();
       const stageBox = container.getBoundingClientRect();
-      
+
       area.value = editingValue;
       area.style.position = 'absolute';
       area.style.top = `${absPos.y}px`;
@@ -269,7 +286,41 @@ const CanvasElement: React.FC<Props> = ({
       }
       case LayerType.IMAGE: {
         const il = layer as ImageLayer;
-        if (il.mediaType === 'video' && videoElement) return <KonvaImage {...commonProps} image={videoElement} />;
+
+        let activeFilters: any[] = [];
+        let effectProps = {};
+
+        if (il.mediaType === 'video' && il.filter && il.filter !== 'none') {
+          const config = getEffectConfig(il.filter);
+          if (config) {
+            if (config.contrast !== undefined) activeFilters.push(Konva.Filters.Contrast);
+            if (config.brightness !== undefined) activeFilters.push(Konva.Filters.Brighten);
+            if (config.saturation !== undefined) activeFilters.push(Konva.Filters.HSV); // Saturation uses HSV
+            if (config.red !== undefined || config.green !== undefined || config.blue !== undefined) activeFilters.push(Konva.Filters.RGB);
+            // Grayscale check
+            if (il.filter === 'bw' || il.filter === 'noir') activeFilters.push(Konva.Filters.Grayscale);
+
+            effectProps = {
+              contrast: config.contrast,
+              brightness: config.brightness,
+              saturation: config.saturation, // HSV
+              red: config.red,
+              green: config.green,
+              blue: config.blue
+            };
+          }
+        }
+
+        if (il.mediaType === 'video' && videoElement) {
+          return (
+            <KonvaImage
+              {...commonProps}
+              image={videoElement}
+              filters={activeFilters}
+              {...effectProps}
+            />
+          );
+        }
         return imageElement ? <KonvaImage {...commonProps} image={imageElement} /> : null;
       }
       default: return null;

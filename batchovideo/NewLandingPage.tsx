@@ -157,22 +157,33 @@ const NewLandingPage: React.FC<NewLandingPageProps> = ({ onStartEditing }) => {
                 <div className="space-y-16">
                     <div>
                         <h2 className="text-[18px] md:text-4xl lg:text-5xl font-bold mb-6">Why BatchoVideo?</h2>
-                        <p className="text-zinc-300 text-lg leading-relaxed">
-                            Most video editing tools force you through complex timelines and endless menus. BatchoVideo removes that friction.
-                            With canvas-based editing and intuitive layer controls, you get professional results without the tedious manual work.
-                            Every video is crafted with precision, while still giving you full creative control when you need it.
-                            BatchoVideo turns hours of editing into just a few clicks.
-                        </p>
+                        <div className="space-y-6 text-zinc-300 text-lg leading-relaxed">
+                            <p>
+                                Most video editors are built around timelines, tracks, and endless menus.
+                                BatchoVideo takes a different approach.
+                            </p>
+                            <p>
+                                Design directly on a canvas. Layer video, text, and shapes with precision. Build scenes like pages, choose your aspect ratio, and export clean MP4 videos—fast.
+                            </p>
+                            <p className="font-medium text-white">
+                                No clutter. No friction. Just intentional video design.
+                            </p>
+                        </div>
                     </div>
 
                     <div>
                         <h2 className="text-[18px] md:text-4xl lg:text-5xl font-bold mb-6">Built for Creators</h2>
-                        <p className="text-zinc-300 text-lg leading-relaxed">
-                            BatchoVideo was built to solve a real problem: content creators, marketers, and educators were wasting countless hours
-                            making the same edits across multiple videos. No tool truly streamlined video creation while offering intelligent,
-                            targeted control. We created BatchoVideo to bridge that gap — a fast, reliable editor that handles the repetitive work,
-                            adapts to your creative needs, and scales effortlessly with your workflow.
-                        </p>
+                        <div className="space-y-6 text-zinc-300 text-lg leading-relaxed">
+                            <p>
+                                BatchoVideo is built for creators who care about layout, consistency, and speed.
+                            </p>
+                            <p>
+                                Whether you’re making social content, presentations, tutorials, or ads, BatchoVideo lets you reuse designs, swap media, and produce polished videos without repeating the same edits over and over.
+                            </p>
+                            <p className="font-medium text-white">
+                                Create once. Adapt everywhere.
+                            </p>
+                        </div>
                     </div>
                 </div>
             </section>
@@ -183,34 +194,29 @@ const NewLandingPage: React.FC<NewLandingPageProps> = ({ onStartEditing }) => {
                 <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-8">
                     {[
                         {
-                            quote: "BatchoVideo completely transformed our content workflow. What used to take hours now takes seconds — and looks even better.",
-                            author: "Maya",
-                            role: "Marketing Agency"
+                            quote: "BatchoVideo changed how we produce video layouts. What used to require timelines and repeated edits now happens visually on a canvas—and the results are consistently polished.",
+                            author: "Jordan P.",
+                            role: "Creative Director"
                         },
                         {
-                            quote: "As a small creator, I couldn't afford expensive software. BatchoVideo gives me studio-quality videos whenever I need them.",
-                            author: "Daniel",
-                            role: "YouTube Creator"
+                            quote: "I needed professional-looking videos without spending hours editing. BatchoVideo lets me design once, reuse scenes, and export clean MP4s whenever I need them.",
+                            author: "Elena R.",
+                            role: "Independent Creator"
                         },
                         {
-                            quote: "Our social media posts instantly looked more premium. The consistent edits noticeably improved engagement and conversions.",
-                            author: "Aisha",
-                            role: "E-commerce Brand"
+                            quote: "Our social videos feel more intentional now. Layouts stay consistent across formats, and exporting different aspect ratios is effortless.",
+                            author: "Marcus L.",
+                            role: "Growth Marketing Lead"
                         },
                         {
-                            quote: "I run a content agency — BatchoVideo saves me so much time. I can generate on-brand visuals for clients in minutes.",
-                            author: "Chris",
-                            role: "Content Agency"
+                            quote: "BatchoVideo fits perfectly into our workflow. We design scenes like pages, swap media, and deliver finished videos faster than ever.",
+                            author: "Sofia K.",
+                            role: "Content Strategist"
                         },
                         {
-                            quote: "BatchoVideo makes even quick screen recordings look professionally edited. It's like having a video editor in my pocket.",
-                            author: "Lena",
-                            role: "Course Creator"
-                        },
-                        {
-                            quote: "Our entire product line finally has a unified, high-end look across our videos and ads. Zero manual retouching needed.",
-                            author: "Oliver",
-                            role: "Product Brand"
+                            quote: "We finally have a unified visual system for video. Every export looks aligned, on-brand, and ready to publish—no manual fixes required.",
+                            author: "Daniel M.",
+                            role: "Product Marketing Manager"
                         }
                     ].map((testimonial, idx) => (
                         <div key={idx} className="space-y-4">
@@ -232,31 +238,39 @@ const NewLandingPage: React.FC<NewLandingPageProps> = ({ onStartEditing }) => {
                     {[
                         {
                             question: "What is BatchoVideo?",
-                            answer: "BatchoVideo is a canvas-based video editor that lets you layer videos, add text, and create professional content quickly and intuitively."
+                            answer: "BatchoVideo is a canvas-based video editor that lets you design videos visually using layers and scenes. You can overlay text and shapes on video, choose your canvas size, and export polished MP4 videos without working on a traditional timeline."
                         },
                         {
                             question: "Do I need video editing experience to use it?",
-                            answer: "No. The canvas interface is intuitive and designed for creators of all skill levels. You can start creating professional videos immediately."
+                            answer: "No. BatchoVideo is designed to feel more like a design tool than a traditional video editor. If you can work with layers and pages, you can start creating immediately."
                         },
                         {
-                            question: "Can I export in different formats?",
-                            answer: "Yes. BatchoVideo supports multiple export formats and resolutions, optimized for social media, presentations, and web use."
+                            question: "How does BatchoVideo differ from timeline editors?",
+                            answer: "Instead of editing on a timeline, you design directly on a canvas. Videos, text, and shapes are layered visually, scenes act like pages, and layouts stay consistent across exports."
                         },
                         {
-                            question: "Are my videos stored permanently?",
-                            answer: "Your projects are saved in your account so you can return to them later. You have full control over your content."
+                            question: "Can I export in different aspect ratios?",
+                            answer: "Yes. You can choose from common aspect ratios like 16:9, 9:16, and 1:1—or set custom canvas sizes—and export MP4 videos optimized for social, web, or presentations."
                         },
                         {
-                            question: "What types of videos work best with BatchoVideo?",
-                            answer: "Anything — tutorials, social media content, presentations, marketing videos, and more. BatchoVideo is versatile and adapts to your needs."
+                            question: "How are scenes used?",
+                            answer: "Scenes work like pages. Each scene can have its own layout and content, and you can export scenes individually or as part of a full video."
                         },
                         {
-                            question: "Will BatchoVideo get better over time?",
-                            answer: "Yes. We continuously improve the editor with new features, better performance, and enhanced capabilities based on user feedback."
+                            question: "Are my projects saved?",
+                            answer: "Yes. Your projects are saved to your account so you can return, edit, and export whenever you need. You stay in full control of your content."
+                        },
+                        {
+                            question: "What types of videos is BatchoVideo best for?",
+                            answer: "BatchoVideo works especially well for social content, marketing videos, presentations, tutorials, product demos, and branded layouts that need consistent design."
+                        },
+                        {
+                            question: "Is BatchoVideo still improving?",
+                            answer: "Yes. BatchoVideo is actively developed, with regular updates focused on performance, usability, and new creative capabilities."
                         },
                         {
                             question: "How many videos can I create?",
-                            answer: "It depends on your plan. Our free tier lets you experiment, while premium plans offer unlimited projects and exports."
+                            answer: "That depends on your plan. You can start for free to explore the editor, and upgrade for higher limits and expanded export options."
                         }
                     ].map((faq, idx) => (
                         <div key={idx} className="space-y-3">
@@ -305,7 +319,7 @@ const NewLandingPage: React.FC<NewLandingPageProps> = ({ onStartEditing }) => {
                             ✓ + 3 Free Credits
                         </div>
 
-                        <button className="w-full py-3 bg-emerald-500 text-white rounded-full font-semibold hover:bg-emerald-600 transition-colors">
+                        <button onClick={onStartEditing} className="w-full py-3 bg-emerald-500 text-white rounded-full font-semibold hover:bg-emerald-600 transition-colors">
                             Get Started
                         </button>
                     </div>
@@ -342,7 +356,7 @@ const NewLandingPage: React.FC<NewLandingPageProps> = ({ onStartEditing }) => {
                             ✓ + 3 Free Credits
                         </div>
 
-                        <button className="w-full py-3 bg-blue-500 text-white rounded-full font-semibold hover:bg-blue-600 transition-colors">
+                        <button onClick={onStartEditing} className="w-full py-3 bg-blue-500 text-white rounded-full font-semibold hover:bg-blue-600 transition-colors">
                             Get Started
                         </button>
                     </div>
@@ -375,7 +389,7 @@ const NewLandingPage: React.FC<NewLandingPageProps> = ({ onStartEditing }) => {
                             ✓ + 3 Free Credits
                         </div>
 
-                        <button className="w-full py-3 bg-violet-500 text-white rounded-full font-semibold hover:bg-violet-600 transition-colors">
+                        <button onClick={onStartEditing} className="w-full py-3 bg-violet-500 text-white rounded-full font-semibold hover:bg-violet-600 transition-colors">
                             Get Started
                         </button>
                     </div>

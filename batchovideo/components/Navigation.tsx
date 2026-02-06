@@ -102,7 +102,7 @@ const Navigation: React.FC<NavigationProps> = ({ onGetStarted }) => {
                         Pricing
                     </button>
                     <button
-                        onClick={() => handleNavigation('/signin')}
+                        onClick={() => handleNavigation('/signup')}
                         className="text-white text-left py-2 hover:text-blue-400 transition-colors"
                     >
                         Sign Up

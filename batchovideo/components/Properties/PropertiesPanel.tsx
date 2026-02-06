@@ -4,8 +4,9 @@ import { Page, Layer, LayerType, TextLayer, ShapeLayer, ImageLayer, AspectRatio 
 import ScenesSection from './ScenesSection';
 import LayersPanel from './LayersPanel';
 import { ASPECT_RATIOS } from '../../constants';
-import { 
-  Play, Pause, RotateCcw, Volume2, VolumeX, Layout, Palette, 
+import { VIDEO_EFFECTS } from '../../constants/videoEffects';
+import {
+  Play, Pause, RotateCcw, Volume2, VolumeX, Layout, Palette,
   AlignLeft, AlignCenter, AlignRight, Type as TypeIcon,
   Plus, Minus, ChevronDown, Check, MousePointer2, Sparkles, Wand2,
   Video as VideoIcon, MoveRight, Clock, Zap
@@ -36,7 +37,7 @@ const fonts = [
   { name: 'Bodoni Moda', family: '"Bodoni Moda", serif' },
   { name: 'Didot', family: '"GFS Didot", serif' },
   { name: 'Futura', family: 'Futura, "Trebuchet MS", sans-serif' },
-  { name: 'Glamour', family: '"Playfair Display", serif' }, 
+  { name: 'Glamour', family: '"Playfair Display", serif' },
   { name: 'Helvetica', family: 'Helvetica, Arial, sans-serif' },
   { name: 'Inter', family: '"Inter", sans-serif' },
   { name: 'Manrope', family: '"Manrope", sans-serif' },
@@ -44,7 +45,7 @@ const fonts = [
   { name: 'Roboto Slab', family: '"Roboto Slab", serif' },
 ];
 
-const PropertiesPanel: React.FC<Props> = ({ 
+const PropertiesPanel: React.FC<Props> = ({
   pages, activePageId, selectedLayer, onUpdateLayer, onDuplicateLayer,
   onUpdatePage, onSelectLayer, onReorderLayers, onPageAction, onGenerateVideo
 }) => {
@@ -137,49 +138,27 @@ const PropertiesPanel: React.FC<Props> = ({
 
             {/* TRANSITIONS (PRO STUB) */}
             <section className="pt-6 border-t border-zinc-800/50">
-               <div className="flex items-center justify-between mb-4">
-                  <div className="flex items-center gap-2">
-                    <Zap size={14} className="text-amber-500" />
-                    <h3 className="text-[11px] font-bold text-zinc-500 tracking-wider uppercase">Motion & FX</h3>
-                  </div>
-                  <span className="text-[9px] text-amber-500/50 font-black tracking-widest uppercase">Experimental</span>
-               </div>
-               <div className="space-y-3">
-                 <div className="flex flex-col gap-1.5">
-                   <label className="text-[10px] text-zinc-500 font-semibold">Entry Transition</label>
-                   <select disabled className="bg-zinc-800 border border-zinc-700 rounded px-3 h-9 text-xs text-zinc-400 cursor-not-allowed opacity-50">
-                     <option>None</option>
-                     <option>Fade In</option>
-                     <option>Slide Left</option>
-                     <option>Scale Bounce</option>
-                   </select>
-                 </div>
-               </div>
+              <div className="flex items-center justify-between mb-4">
+                <div className="flex items-center gap-2">
+                  <Zap size={14} className="text-amber-500" />
+                  <h3 className="text-[11px] font-bold text-zinc-500 tracking-wider uppercase">Motion & FX</h3>
+                </div>
+                <span className="text-[9px] text-amber-500/50 font-black tracking-widest uppercase">Experimental</span>
+              </div>
+              <div className="space-y-3">
+                <div className="flex flex-col gap-1.5">
+                  <label className="text-[10px] text-zinc-500 font-semibold">Entry Transition</label>
+                  <select disabled className="bg-zinc-800 border border-zinc-700 rounded px-3 h-9 text-xs text-zinc-400 cursor-not-allowed opacity-50">
+                    <option>None</option>
+                    <option>Fade In</option>
+                    <option>Slide Left</option>
+                    <option>Scale Bounce</option>
+                  </select>
+                </div>
+              </div>
             </section>
 
-            {/* AI MAGIC SECTION */}
-            {selectedLayer.type === LayerType.IMAGE && (
-              <section className="pt-6 border-t border-zinc-800/50">
-                <div className="flex items-center gap-2 mb-4">
-                  <Sparkles size={14} className="text-blue-400" />
-                  <h3 className="text-[11px] font-bold text-zinc-500 tracking-wider uppercase">Generative AI</h3>
-                </div>
-                <div className="bg-pro-gradient/5 border border-blue-500/20 rounded-xl p-4">
-                  <p className="text-[10px] text-zinc-400 leading-relaxed mb-3">
-                    {(selectedLayer as ImageLayer).mediaType === 'image' 
-                      ? "Create cinematic motion using this image as a keyframe."
-                      : "Style-transfer this video using the current frame as a prompt."}
-                  </p>
-                  <button 
-                    onClick={() => onGenerateVideo(selectedLayer.id)}
-                    className="w-full py-2 bg-pro-gradient hover:opacity-90 text-white rounded-lg text-xs font-bold flex items-center justify-center gap-2 transition-all active:scale-95 shadow-lg shadow-blue-500/10"
-                  >
-                    <Wand2 size={14} />
-                    {(selectedLayer as ImageLayer).mediaType === 'image' ? "AI Motion Gen" : "AI Stylize"}
-                  </button>
-                </div>
-              </section>
-            )}
+
 
             {selectedLayer.type === LayerType.TEXT && (
               <section className="pt-6 border-t border-zinc-800/50">
@@ -193,12 +172,12 @@ const PropertiesPanel: React.FC<Props> = ({
                     </button>
                     {isFontOpen && (
                       <div className="absolute top-full left-0 right-0 mt-1.5 bg-[#1e1e20] border border-zinc-700 rounded-lg shadow-2xl z-[100] overflow-hidden max-h-80 overflow-y-auto no-scrollbar ring-1 ring-black/50">
-                         {fonts.map((f) => (
-                           <button key={f.name} onClick={() => { handleLayerChange({ fontFamily: f.family }); setIsFontOpen(false); }} className="w-full flex items-center justify-between px-4 py-3 text-left hover:bg-zinc-800 transition-colors group">
-                             <span style={{ fontFamily: f.family }} className="text-sm text-zinc-200 group-hover:text-white">{f.name}</span>
-                             {activeFont.name === f.name && <Check size={14} className="text-blue-500" />}
-                           </button>
-                         ))}
+                        {fonts.map((f) => (
+                          <button key={f.name} onClick={() => { handleLayerChange({ fontFamily: f.family }); setIsFontOpen(false); }} className="w-full flex items-center justify-between px-4 py-3 text-left hover:bg-zinc-800 transition-colors group">
+                            <span style={{ fontFamily: f.family }} className="text-sm text-zinc-200 group-hover:text-white">{f.name}</span>
+                            {activeFont.name === f.name && <Check size={14} className="text-blue-500" />}
+                          </button>
+                        ))}
                       </div>
                     )}
                   </div>
@@ -243,14 +222,36 @@ const PropertiesPanel: React.FC<Props> = ({
               <section className="pt-6 border-t border-zinc-800/50">
                 <h3 className="text-[11px] font-bold text-zinc-500 tracking-wider mb-4 uppercase">Appearance</h3>
                 <div className="space-y-4">
-                   <div className="grid grid-cols-2 gap-4">
-                      <InputField label="Fill" type="color" value={(selectedLayer as ShapeLayer).fill} onChange={(v: string) => handleLayerChange({ fill: v })} />
-                      <InputField label="Stroke" type="color" value={(selectedLayer as ShapeLayer).stroke} onChange={(v: string) => handleLayerChange({ stroke: v })} />
-                   </div>
-                   <SteppedInput label="Stroke Width" value={(selectedLayer as ShapeLayer).strokeWidth} onChange={(v: number) => handleLayerChange({ strokeWidth: v })} min={0} />
-                   {(selectedLayer.type === LayerType.POLYGON || selectedLayer.type === LayerType.STAR) && <SteppedInput label="Sides / Points" value={(selectedLayer as ShapeLayer).sides || 5} onChange={(v: number) => handleLayerChange({ sides: Math.max(3, v) })} min={3} />}
-                   {selectedLayer.type === LayerType.STAR && <SteppedInput label="Inner Radius" value={(selectedLayer as ShapeLayer).innerRadius || 20} onChange={(v: number) => handleLayerChange({ innerRadius: Math.max(1, v) })} min={1} />}
-                   {selectedLayer.type === LayerType.RECT && <SteppedInput label="Corner Radius" value={(selectedLayer as ShapeLayer).cornerRadius} onChange={(v: number) => handleLayerChange({ cornerRadius: v })} min={0} />}
+                  <div className="grid grid-cols-2 gap-4">
+                    <InputField label="Fill" type="color" value={(selectedLayer as ShapeLayer).fill} onChange={(v: string) => handleLayerChange({ fill: v })} />
+                    <InputField label="Stroke" type="color" value={(selectedLayer as ShapeLayer).stroke} onChange={(v: string) => handleLayerChange({ stroke: v })} />
+                  </div>
+                  <SteppedInput label="Stroke Width" value={(selectedLayer as ShapeLayer).strokeWidth} onChange={(v: number) => handleLayerChange({ strokeWidth: v })} min={0} />
+                  {(selectedLayer.type === LayerType.POLYGON || selectedLayer.type === LayerType.STAR) && <SteppedInput label="Sides / Points" value={(selectedLayer as ShapeLayer).sides || 5} onChange={(v: number) => handleLayerChange({ sides: Math.max(3, v) })} min={3} />}
+                  {selectedLayer.type === LayerType.STAR && <SteppedInput label="Inner Radius" value={(selectedLayer as ShapeLayer).innerRadius || 20} onChange={(v: number) => handleLayerChange({ innerRadius: Math.max(1, v) })} min={1} />}
+                  {selectedLayer.type === LayerType.RECT && <SteppedInput label="Corner Radius" value={(selectedLayer as ShapeLayer).cornerRadius} onChange={(v: number) => handleLayerChange({ cornerRadius: v })} min={0} />}
+                </div>
+              </section>
+            )}
+
+            {/* AI MAGIC SECTION - REMOVED STYLIZE, KEPT MOTION GEN FOR IMAGES ONLY */}
+            {selectedLayer.type === LayerType.IMAGE && (selectedLayer as ImageLayer).mediaType === 'image' && (
+              <section className="pt-6 border-t border-zinc-800/50">
+                <div className="flex items-center gap-2 mb-4">
+                  <Sparkles size={14} className="text-blue-400" />
+                  <h3 className="text-[11px] font-bold text-zinc-500 tracking-wider uppercase">Generative AI</h3>
+                </div>
+                <div className="bg-pro-gradient/5 border border-blue-500/20 rounded-xl p-4">
+                  <p className="text-[10px] text-zinc-400 leading-relaxed mb-3">
+                    Create cinematic motion using this image as a keyframe.
+                  </p>
+                  <button
+                    onClick={() => onGenerateVideo(selectedLayer.id)}
+                    className="w-full py-2 bg-pro-gradient hover:opacity-90 text-white rounded-lg text-xs font-bold flex items-center justify-center gap-2 transition-all active:scale-95 shadow-lg shadow-blue-500/10"
+                  >
+                    <Wand2 size={14} />
+                    AI Motion Gen
+                  </button>
                 </div>
               </section>
             )}
@@ -259,6 +260,22 @@ const PropertiesPanel: React.FC<Props> = ({
               <section className="pt-6 border-t border-zinc-800/50">
                 <h3 className="text-[11px] font-bold text-zinc-500 tracking-wider mb-4 uppercase">Video Engine</h3>
                 <div className="space-y-5">
+                  {/* Video Effects Dropdown */}
+                  <div className="flex flex-col gap-1.5">
+                    <label className="text-[10px] text-zinc-500 font-semibold flex items-center gap-1.5">
+                      <Palette size={12} />
+                      Video Effects
+                    </label>
+                    <select
+                      value={(selectedLayer as ImageLayer).filter || 'none'}
+                      onChange={(e) => handleLayerChange({ filter: e.target.value })}
+                      className="bg-zinc-800 border border-zinc-700 rounded px-3 h-9 text-xs text-white focus:outline-none focus:border-blue-500 cursor-pointer"
+                    >
+                      {VIDEO_EFFECTS.map(effect => (
+                        <option key={effect.id} value={effect.id}>{effect.name}</option>
+                      ))}
+                    </select>
+                  </div>
                   <div className="flex items-center justify-between gap-3">
                     <button onClick={() => handleLayerChange({ playing: !(selectedLayer as ImageLayer).playing })} className={`flex items-center justify-center gap-2 px-4 h-11 rounded-lg text-xs font-bold transition-all flex-1 shadow-lg active:scale-95 ${(selectedLayer as ImageLayer).playing ? 'bg-zinc-800 text-zinc-400 hover:text-white border border-zinc-700' : 'bg-blue-600 hover:bg-blue-500 text-white'}`}>
                       {(selectedLayer as ImageLayer).playing ? <Pause size={16} fill="currentColor" /> : <Play size={16} fill="currentColor" />}
@@ -267,14 +284,14 @@ const PropertiesPanel: React.FC<Props> = ({
                     <button onClick={() => handleLayerChange({ loop: !(selectedLayer as ImageLayer).loop })} className={`w-11 h-11 flex items-center justify-center rounded-lg border transition-all ${(selectedLayer as ImageLayer).loop ? 'bg-blue-600/10 border-blue-500/50 text-blue-400' : 'bg-zinc-800 border-zinc-700 text-zinc-500 hover:text-zinc-300'}`} title="Loop Scene"><RotateCcw size={18} /></button>
                   </div>
                   <div className="space-y-3">
-                     <div className="flex items-center justify-between">
-                        <label className="text-[10px] text-zinc-500 font-semibold">Audio Mix</label>
-                        <span className="text-[10px] text-zinc-400 font-mono tracking-tighter">{Math.round(((selectedLayer as ImageLayer).volume ?? 1) * 100)}%</span>
-                     </div>
-                     <div className="flex items-center gap-3">
-                       {(selectedLayer as ImageLayer).volume === 0 ? <VolumeX size={16} className="text-zinc-500" /> : <Volume2 size={16} className="text-zinc-500" />}
-                       <input type="range" min="0" max="1" step="0.01" value={(selectedLayer as ImageLayer).volume ?? 1} onChange={(e) => handleLayerChange({ volume: parseFloat(e.target.value) })} className="flex-1 accent-blue-500 h-1 bg-zinc-800 rounded-lg appearance-none cursor-pointer hover:bg-zinc-700 transition-colors" />
-                     </div>
+                    <div className="flex items-center justify-between">
+                      <label className="text-[10px] text-zinc-500 font-semibold">Audio Mix</label>
+                      <span className="text-[10px] text-zinc-400 font-mono tracking-tighter">{Math.round(((selectedLayer as ImageLayer).volume ?? 1) * 100)}%</span>
+                    </div>
+                    <div className="flex items-center gap-3">
+                      {(selectedLayer as ImageLayer).volume === 0 ? <VolumeX size={16} className="text-zinc-500" /> : <Volume2 size={16} className="text-zinc-500" />}
+                      <input type="range" min="0" max="1" step="0.01" value={(selectedLayer as ImageLayer).volume ?? 1} onChange={(e) => handleLayerChange({ volume: parseFloat(e.target.value) })} className="flex-1 accent-blue-500 h-1 bg-zinc-800 rounded-lg appearance-none cursor-pointer hover:bg-zinc-700 transition-colors" />
+                    </div>
                   </div>
                 </div>
               </section>

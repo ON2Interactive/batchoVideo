@@ -1,5 +1,5 @@
 
-export type AspectRatio = 
+export type AspectRatio =
   | '1:1' | '2:3' | '3:2' | '3:4' | '4:3' | '4:5' | '5:4' | '9:16' | '16:9'
   | '1.85:1 Flat' | '2.39:1 CinemaScope' | '21:9 UltraWide' | '1.43:1 IMAX';
 
@@ -59,6 +59,7 @@ export interface ImageLayer extends BaseLayer {
   type: LayerType.IMAGE;
   src: string;
   isBaseMedia?: boolean;
+  filter?: string; // Video effect preset
   mediaType: 'image' | 'video';
   // Video specific props
   playing?: boolean;

@@ -1,5 +1,7 @@
+
 import React, { useState } from 'react';
-import { authHelpers } from '../../lib/supabase';
+import { authHelpers, dbHelpers } from '../../lib/supabase';
+import { useRecaptcha } from '../../hooks/useRecaptcha';
 
 interface SignupPageProps {
     onSuccess: () => void;
@@ -13,6 +15,7 @@ export const SignupPage: React.FC<SignupPageProps> = ({ onSuccess, onSwitchToLog
     const [confirmPassword, setConfirmPassword] = useState('');
     const [error, setError] = useState('');
     const [loading, setLoading] = useState(false);
+    const { executeRecaptcha } = useRecaptcha();
 
     const handleSignup = async (e: React.FormEvent) => {
         e.preventDefault();
@@ -30,6 +33,14 @@ export const SignupPage: React.FC<SignupPageProps> = ({ onSuccess, onSwitchToLog
 
         setLoading(true);
 
+        // Execute ReCaptcha
+        const token = await executeRecaptcha('SIGNUP');
+        if (!token) {
+            setError('Verification failed. Please try again.');
+            setLoading(false);
+            return;
+        }
+
         const { data, error: authError } = await authHelpers.signUp(email, password, fullName);
 
         if (authError) {
@@ -39,6 +50,14 @@ export const SignupPage: React.FC<SignupPageProps> = ({ onSuccess, onSwitchToLog
         }
 
         if (data.user) {
+            // Send Admin Notification (Pass token if backend verification is enabled later)
+            await dbHelpers.sendEmail({
+                to: email,
+                subject: 'New User Signup',
+                message: fullName,
+                type: 'signup'
+            }).catch(console.error);
+
             onSuccess();
         }
     };
@@ -188,11 +207,30 @@ export const SignupPage: React.FC<SignupPageProps> = ({ onSuccess, onSwitchToLog
                             fontSize: '16px',
                             fontWeight: 'bold',
                             cursor: loading ? 'not-allowed' : 'pointer',
-                            transition: 'background-color 0.2s'
+                            transition: 'background-color 0.2s',
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            gap: '8px'
                         }}
                     >
+                        {loading && (
+                            <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+                        )}
                         {loading ? 'Creating account...' : 'Sign Up'}
                     </button>
+
+                    <p style={{
+                        color: '#666',
+                        fontSize: '11px',
+                        marginTop: '15px',
+                        textAlign: 'center',
+                        lineHeight: '1.4'
+                    }}>
+                        This site is protected by reCAPTCHA and the Google
+                        <a href="https://policies.google.com/privacy" style={{ color: '#888', textDecoration: 'underline', margin: '0 4px' }}>Privacy Policy</a> and
+                        <a href="https://policies.google.com/terms" style={{ color: '#888', textDecoration: 'underline', margin: '0 4px' }}>Terms of Service</a> apply.
+                    </p>
                 </form>
 
                 <div style={{ marginTop: '20px', textAlign: 'center' }}>
