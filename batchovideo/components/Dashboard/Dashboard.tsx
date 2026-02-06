@@ -76,7 +76,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ onNewProject, onLoadProjec
             }}>
                 <div>
                     <div style={{ height: '32px', marginBottom: '8px' }}>
-                        <img src="../Assets/batchoVideo.svg" alt="batchoVideo" style={{ height: '100%' }} />
+                        <img src="/batchoVideo.svg" alt="batchoVideo" style={{ height: '100%' }} />
                     </div>
                     <p style={{ color: '#888', fontSize: '14px', margin: '5px 0 0 0' }}>
                         Welcome back, {profile?.full_name || user?.email}

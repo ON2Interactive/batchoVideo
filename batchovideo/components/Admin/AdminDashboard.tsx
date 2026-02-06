@@ -89,7 +89,7 @@ export const AdminDashboard: React.FC<{ onLogout: () => void }> = ({ onLogout })
             <div style={{ borderBottom: '1px solid #1a1a1a', padding: '1rem 2rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
                     <div style={{ height: '32px' }}>
-                        <img src="../Assets/batchoVideo.svg" alt="batchoVideo" style={{ height: '100%' }} />
+                        <img src="/batchoVideo.svg" alt="batchoVideo" style={{ height: '100%' }} />
                     </div>
                     <span style={{ color: '#666', fontSize: '0.875rem' }}>Admin Dashboard</span>
                 </div>
