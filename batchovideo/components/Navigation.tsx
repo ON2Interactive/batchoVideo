@@ -1,5 +1,6 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { Menu, X } from 'lucide-react';
 
 interface NavigationProps {
     onGetStarted?: () => void;
@@ -7,15 +8,16 @@ interface NavigationProps {
 
 const Navigation: React.FC<NavigationProps> = ({ onGetStarted }) => {
     const navigate = useNavigate();
+    const [isMenuOpen, setIsMenuOpen] = useState(false);
 
     const handleNavigation = (path: string) => {
         if (path.startsWith('#')) {
-            // Smooth scroll to anchor
             const element = document.querySelector(path);
             element?.scrollIntoView({ behavior: 'smooth' });
         } else {
             navigate(path);
         }
+        setIsMenuOpen(false);
     };
 
     return (
@@ -52,73 +54,61 @@ const Navigation: React.FC<NavigationProps> = ({ onGetStarted }) => {
                     />
                 </div>
 
-                {/* Menu Items - Flush Right */}
-                <div style={{
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: '2rem',
-                }}>
+                {/* Mobile Menu Button - Show on small screens */}
+                <div className="md:hidden">
+                    <button
+                        onClick={() => setIsMenuOpen(!isMenuOpen)}
+                        className="text-white p-2"
+                    >
+                        {isMenuOpen ? <X size={24} /> : <Menu size={24} />}
+                    </button>
+                </div>
+
+                {/* Desktop Menu Items - Hidden on mobile */}
+                <div className="hidden md:flex items-center gap-8">
                     <button
                         onClick={() => handleNavigation('#pricing')}
-                        style={{
-                            background: 'transparent',
-                            border: 'none',
-                            color: '#fff',
-                            fontSize: '0.95rem',
-                            cursor: 'pointer',
-                            padding: '0.5rem 0',
-                            transition: 'color 0.2s',
-                        }}
-                        onMouseEnter={(e) => e.currentTarget.style.color = '#60a5fa'}
-                        onMouseLeave={(e) => e.currentTarget.style.color = '#fff'}
+                        className="text-white hover:text-blue-400 transition-colors text-[0.95rem]"
                     >
                         Pricing
                     </button>
 
                     <button
                         onClick={() => handleNavigation('/signin')}
-                        style={{
-                            background: 'transparent',
-                            border: 'none',
-                            color: '#fff',
-                            fontSize: '0.95rem',
-                            cursor: 'pointer',
-                            padding: '0.5rem 0',
-                            transition: 'color 0.2s',
-                        }}
-                        onMouseEnter={(e) => e.currentTarget.style.color = '#60a5fa'}
-                        onMouseLeave={(e) => e.currentTarget.style.color = '#fff'}
+                        className="text-white hover:text-blue-400 transition-colors text-[0.95rem]"
                     >
                         Sign In
                     </button>
 
-                    <button
-                        onClick={onGetStarted || (() => handleNavigation('/signup'))}
-                        style={{
-                            background: 'linear-gradient(135deg, #3b82f6 0%, #2563eb 100%)',
-                            border: 'none',
-                            color: '#fff',
-                            fontSize: '0.95rem',
-                            cursor: 'pointer',
-                            padding: '0.625rem 1.5rem',
-                            borderRadius: '0.5rem',
-                            fontWeight: '500',
-                            transition: 'transform 0.2s, box-shadow 0.2s',
-                            boxShadow: '0 4px 12px rgba(59, 130, 246, 0.3)',
-                        }}
-                        onMouseEnter={(e) => {
-                            e.currentTarget.style.transform = 'translateY(-1px)';
-                            e.currentTarget.style.boxShadow = '0 6px 20px rgba(59, 130, 246, 0.4)';
-                        }}
-                        onMouseLeave={(e) => {
-                            e.currentTarget.style.transform = 'translateY(0)';
-                            e.currentTarget.style.boxShadow = '0 4px 12px rgba(59, 130, 246, 0.3)';
-                        }}
-                    >
-                        Get Started
-                    </button>
+                    {/* Removed blue button styling, kept text link for desktop consistency or removed as per request for consistency? 
+                        User said "Remove the Blue Button". Usually this means removing the button style. 
+                        I'll keep "Get Started" as a simple link for now or just remove it if redundant?
+                        User said nav reveals "Pricing and Sign up". Maybe "Get Started" is removed?
+                        The Request "Remove the Blue Button... use a response menu... reveals Pricing and Sign up".
+                        This suggests Get Started might not be needed in nav anymore. 
+                        But usually 'Sign In' vs 'Get Started' is good. 
+                        I will remove "Get Started" from nav completely based on "reveals Pricing and Sign up".
+                     */}
                 </div>
             </div>
+
+            {/* Mobile Menu Overlay */}
+            {isMenuOpen && (
+                <div className="md:hidden absolute top-full left-0 right-0 bg-black/95 backdrop-blur-xl border-b border-white/5 py-4 px-8 flex flex-col gap-4">
+                    <button
+                        onClick={() => handleNavigation('#pricing')}
+                        className="text-white text-left py-2 hover:text-blue-400 transition-colors"
+                    >
+                        Pricing
+                    </button>
+                    <button
+                        onClick={() => handleNavigation('/signin')}
+                        className="text-white text-left py-2 hover:text-blue-400 transition-colors"
+                    >
+                        Sign Up
+                    </button>
+                </div>
+            )}
         </nav>
     );
 };

@@ -23,33 +23,52 @@ const NewLandingPage: React.FC<NewLandingPageProps> = ({ onStartEditing }) => {
             <Navigation onGetStarted={onStartEditing} />
 
             {/* Hero Section */}
-            <section className="relative z-10 px-8 pt-24 pb-32 max-w-7xl mx-auto min-h-[1100px] flex items-center">
+            <section className="relative z-10 px-8 pt-24 pb-32 max-w-7xl mx-auto min-h-[800px] flex items-center">
                 <div className="grid lg:grid-cols-2 gap-16 items-center w-full">
                     {/* Left: Text Content */}
                     <div className="space-y-8">
-                        <h1 className="text-6xl lg:text-7xl font-bold leading-[1.1] tracking-tight">
-                            Create Videos
-                            <br />
-                            with Precision.
-                        </h1>
+                        <div className="space-y-2">
+                            <h1 className="text-6xl lg:text-7xl font-bold leading-[1.1] tracking-tight">
+                                Design Video on Canvas.
+                            </h1>
+                            <h1 className="text-6xl lg:text-7xl font-bold leading-[1.1] tracking-tight text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-purple-500">
+                                Export Clean MP4s.
+                            </h1>
+                        </div>
+
                         <p className="text-xl text-zinc-400 max-w-lg leading-relaxed">
-                            Layer videos, add text, and export professional content—fast, clean, and intentional.
+                            BatchoVideo is a layer-based video canvas for creators who want fast, intentional layout control—without fighting a traditional editor.
                         </p>
-                        <button
-                            onClick={onStartEditing}
-                            className="group flex items-center gap-3 px-8 py-4 bg-white text-black rounded-full text-base font-semibold hover:scale-105 transition-all shadow-lg shadow-white/10"
-                        >
-                            Start Creating
-                            <ArrowRight size={20} className="group-hover:translate-x-1 transition-transform" />
-                        </button>
+
+                        <div className="space-y-8">
+                            <button
+                                onClick={onStartEditing}
+                                className="group flex items-center gap-3 px-8 py-4 bg-white text-black rounded-full text-base font-semibold hover:scale-105 transition-all shadow-lg shadow-white/10"
+                            >
+                                Start Creating
+                                <ArrowRight size={20} className="group-hover:translate-x-1 transition-transform" />
+                            </button>
+
+                            <div className="space-y-2">
+                                <p className="text-white font-semibold tracking-wide">Design on Canvas</p>
+                                <p className="text-zinc-500 text-sm tracking-wide">
+                                    Layers · Scenes · Aspect Ratios · MP4 Export
+                                </p>
+                            </div>
+                        </div>
                     </div>
 
-                    {/* Right: Visual Demo */}
+                    {/* Right: Visual Demo / Video Placeholder */}
                     <div className="relative">
                         <div className="aspect-video bg-zinc-900/50 backdrop-blur border border-zinc-800 rounded-xl overflow-hidden shadow-2xl">
+                            {/* Placeholder for future video - configured to fill container */}
                             <div className="w-full h-full bg-gradient-to-br from-zinc-900 via-zinc-900 to-black flex items-center justify-center relative">
                                 <div className="absolute inset-0 bg-[linear-gradient(rgba(255,255,255,0.02)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.02)_1px,transparent_1px)] bg-[size:32px_32px]" />
-                                <Play size={64} className="text-zinc-700 relative z-10" />
+                                {/* User said they will provide a video to fill, so keeping this structure ready */}
+                                <div className="text-center p-8">
+                                    <Play size={64} className="text-zinc-700 mx-auto mb-4" />
+                                    <p className="text-zinc-600 text-sm">Demo Video Placeholder</p>
+                                </div>
                             </div>
                         </div>
                         {/* Subtle glow */}
