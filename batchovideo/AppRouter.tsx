@@ -32,16 +32,10 @@ const AppRouter: React.FC = () => {
         const path = location.pathname;
         if (path === '/contact') {
             setView('contact');
-        } else if (path === '/' && view !== 'landing') {
-            // Only switch to landing if we're not authenticated? 
-            // Actually checkAuth handles initial load. 
-            // But if user navigates BACK to home...
-            // Sticky logic: checkAuth determines if meaningful session exists.
-            // If session, '/' usually redirects to dashboard?
-            // Existing logic: checkAuth -> if session -> dashboard.
-            // But if I want to see landing page?
-            // Usually landing is for public.
-            // Let's keep existing logic but handle explicit routes
+        } else if (path === '/') {
+            setView('landing');
+        } else if (path === '/dashboard') {
+            setView('dashboard');
         } else if (path === '/signin') {
             setView('login');
         } else if (path === '/signup') {
@@ -59,14 +53,21 @@ const AppRouter: React.FC = () => {
             const adminStatus = await adminHelpers.isUserAdmin(session.user.id);
             setIsAdmin(adminStatus);
 
-            // Allow public pages even if logged in?
+            // Allow public pages even if logged in
             if (path === '/contact') {
                 setView('contact');
             } else if (path === '/') {
-                // Maybe logged in users should see dashboard?
+                setView('landing');
+            } else if (path === '/dashboard') {
                 setView('dashboard');
             } else {
-                setView('dashboard');
+                // Default for unknown authenticated routes? 
+                // Maybe check if it matches other public routes
+                if (path === '/signin' || path === '/signup') {
+                    setView('dashboard'); // Redirect auth pages to dashboard
+                } else {
+                    setView('landing'); // Default to landing for unknown
+                }
             }
         } else {
             if (path === '/admin') {
@@ -77,6 +78,8 @@ const AppRouter: React.FC = () => {
                 setView('login');
             } else if (path === '/signup') {
                 setView('signup');
+            } else if (path === '/dashboard') {
+                setView('login'); // Protect dashboard
             } else {
                 setView('landing');
             }
