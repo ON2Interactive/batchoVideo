@@ -111,7 +111,7 @@ const NewLandingPage: React.FC<NewLandingPageProps> = ({ onStartEditing }) => {
                         <div className="w-12 h-12 bg-violet-500/10 rounded-lg flex items-center justify-center group-hover:bg-violet-500/20 transition-colors">
                             <Download size={24} className="text-violet-400" />
                         </div>
-                        <h3 className="text-xl font-semibold">Export to WebM</h3>
+                        <h3 className="text-xl font-semibold">Export to MP4</h3>
                         <p className="text-zinc-400 text-sm leading-relaxed">
                             High-quality video export optimized for web and social media.
                         </p>
