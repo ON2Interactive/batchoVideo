@@ -2,23 +2,23 @@
 import React, { useState, useCallback, useEffect, useRef } from 'react';
 import { Stage, Layer as KonvaLayer, Rect, Line } from 'react-konva';
 import { v4 as uuidv4 } from 'uuid';
-import { 
-  EditorState, 
-  Page, 
-  Layer, 
-  LayerType, 
-  AspectRatio, 
-  Point, 
-  TextLayer, 
-  ShapeLayer, 
+import {
+  EditorState,
+  Page,
+  Layer,
+  LayerType,
+  AspectRatio,
+  Point,
+  TextLayer,
+  ShapeLayer,
   ImageLayer,
   Project
 } from './types';
-import { 
-  ASPECT_RATIOS, 
-  MAX_ZOOM, 
-  MIN_ZOOM, 
-  DEFAULT_PAGE_ID 
+import {
+  ASPECT_RATIOS,
+  MAX_ZOOM,
+  MIN_ZOOM,
+  DEFAULT_PAGE_ID
 } from './constants';
 import Toolbar from './components/Toolbar/Toolbar';
 import PropertiesPanel from './components/Properties/PropertiesPanel';
@@ -27,16 +27,16 @@ import ProjectGallery from './components/Editor/ProjectGallery';
 import ExportDialog, { ExportConfig } from './components/Editor/ExportDialog';
 import ProModal from './components/Modals/ProModal';
 import AIModal from './components/Modals/AIModal';
-import LandingPage from './LandingPage';
+
 import { aiService } from './aiService';
 import { db } from './db';
-import { 
-  Download, 
-  Undo2, 
-  Redo2, 
-  Maximize2, 
-  Loader2, 
-  ZoomIn, 
+import {
+  Download,
+  Undo2,
+  Redo2,
+  Maximize2,
+  Loader2,
+  ZoomIn,
   ZoomOut,
   Save,
   Library,
@@ -47,18 +47,20 @@ import {
   ChevronLeft
 } from 'lucide-react';
 
-const App: React.FC = () => {
-  // --- View State ---
-  const [view, setView] = useState<'landing' | 'editor'>('landing');
+interface AppProps {
+  initialProject?: any;
+  onBackToDashboard?: () => void;
+}
 
+const App: React.FC<AppProps> = ({ initialProject, onBackToDashboard }) => {
   // --- Manage Body Scroll ---
   useEffect(() => {
-    if (view === 'editor') {
-      document.body.style.overflow = 'hidden';
-    } else {
+    document.body.style.overflow = 'hidden';
+    return () => {
       document.body.style.overflow = 'auto';
-    }
-  }, [view]);
+    };
+  }, []);
+
 
   // --- Project Management State ---
   const [projectId, setProjectId] = useState<string>(uuidv4());
@@ -82,13 +84,13 @@ const App: React.FC = () => {
       width: ASPECT_RATIOS['16:9'].w,
       height: ASPECT_RATIOS['16:9'].h,
       backgroundColor: '#ffffff',
-      layers: [], 
+      layers: [],
     };
 
     return {
       pages: [initialPage],
       activePageId: DEFAULT_PAGE_ID,
-      zoom: 0.1, 
+      zoom: 0.1,
       pan: { x: 0, y: 0 },
       selectedLayerId: null,
       history: [[initialPage]],
@@ -154,7 +156,6 @@ const App: React.FC = () => {
           historyIndex: 0
         }));
         setShowGallery(false);
-        setView('editor');
       }
     } catch (err) {
       console.error('Failed to load:', err);
@@ -197,7 +198,7 @@ const App: React.FC = () => {
   }, [editorState.historyIndex, editorState.history.length]);
 
   const updateActivePage = useCallback((updates: Partial<Page>) => {
-    const newPages = editorState.pages.map(p => 
+    const newPages = editorState.pages.map(p =>
       p.id === editorState.activePageId ? { ...p, ...updates } : p
     );
     pushToHistory(newPages);
@@ -213,7 +214,7 @@ const App: React.FC = () => {
         if (file) {
           const url = URL.createObjectURL(file);
           const isVideo = type === 'VIDEO_UPLOAD';
-          
+
           if (isVideo) {
             const tempVideo = document.createElement('video');
             tempVideo.src = url;
@@ -272,10 +273,10 @@ const App: React.FC = () => {
 
     switch (type) {
       case LayerType.TEXT:
-        newLayer = { 
-          ...base, name: 'Text', type: LayerType.TEXT, text: 'New Text', width: 600, 
-          fontSize: 60, fontFamily: 'Inter', fontWeight: 'bold', fill: '#000000', 
-          align: 'center', lineHeight: 1.2, letterSpacing: 0 
+        newLayer = {
+          ...base, name: 'Text', type: LayerType.TEXT, text: 'New Text', width: 600,
+          fontSize: 60, fontFamily: 'Inter', fontWeight: 'bold', fill: '#000000',
+          align: 'center', lineHeight: 1.2, letterSpacing: 0
         } as TextLayer;
         break;
       case LayerType.RECT:
@@ -315,7 +316,6 @@ const App: React.FC = () => {
   }, [updateActivePage]);
 
   const handleWheel = (e: React.WheelEvent) => {
-    if (view !== 'editor') return;
     if (e.ctrlKey || e.metaKey) {
       e.preventDefault();
       const zoomSpeed = 0.001;
@@ -330,7 +330,6 @@ const App: React.FC = () => {
   };
 
   const handleMouseDown = (e: React.MouseEvent) => {
-    if (view !== 'editor') return;
     const isBackgroundClick = e.target === workspaceRef.current;
     if (isBackgroundClick) {
       setEditorState(prev => ({ ...prev, selectedLayerId: null }));
@@ -346,7 +345,6 @@ const App: React.FC = () => {
   };
 
   const handleMouseMove = (e: React.MouseEvent) => {
-    if (view !== 'editor') return;
     if (isPanning) {
       const dx = e.clientX - lastMousePos.current.x;
       const dy = e.clientY - lastMousePos.current.y;
@@ -358,11 +356,10 @@ const App: React.FC = () => {
   const handleMouseUp = () => setIsPanning(false);
 
   useEffect(() => {
-    if (view !== 'editor') return;
     if (thumbnailTimeoutRef.current) window.clearTimeout(thumbnailTimeoutRef.current);
     thumbnailTimeoutRef.current = window.setTimeout(() => {
       if (stageRef.current) {
-        const dataURL = stageRef.current.toDataURL({ pixelRatio: 0.1 }); 
+        const dataURL = stageRef.current.toDataURL({ pixelRatio: 0.1 });
         setEditorState(prev => ({
           ...prev,
           pages: prev.pages.map(p => p.id === activePage.id ? { ...p, thumbnail: dataURL } : p)
@@ -370,7 +367,7 @@ const App: React.FC = () => {
       }
     }, 1000);
     return () => { if (thumbnailTimeoutRef.current) window.clearTimeout(thumbnailTimeoutRef.current); };
-  }, [activePage.layers, activePage.backgroundColor, activePage.id, view]);
+  }, [activePage.layers, activePage.backgroundColor, activePage.id]);
 
   const handleZoomIn = () => setEditorState(prev => ({ ...prev, zoom: Math.min(MAX_ZOOM, prev.zoom + 0.1) }));
   const handleZoomOut = () => setEditorState(prev => ({ ...prev, zoom: Math.max(MIN_ZOOM, prev.zoom - 0.1) }));
@@ -381,25 +378,25 @@ const App: React.FC = () => {
     const height = workspaceRef.current.offsetHeight;
     if (width === 0 || height === 0) return;
 
-    const padding = 120; 
+    const padding = 120;
     const availableW = width - padding;
     const availableH = height - padding;
     const zoomW = availableW / activePage.width;
     const zoomH = availableH / activePage.height;
-    const targetZoom = Math.min(zoomW, zoomH, 1.0); 
+    const targetZoom = Math.min(zoomW, zoomH, 1.0);
 
     setEditorState(prev => ({
       ...prev,
       zoom: targetZoom,
-      pan: { 
-        x: (width - activePage.width * targetZoom) / 2, 
-        y: (height - activePage.height * targetZoom) / 2 
+      pan: {
+        x: (width - activePage.width * targetZoom) / 2,
+        y: (height - activePage.height * targetZoom) / 2
       }
     }));
   }, [activePage.width, activePage.height]);
 
   useEffect(() => {
-    if (view !== 'editor' || !workspaceRef.current) return;
+    if (!workspaceRef.current) return;
     const container = workspaceRef.current;
     const observer = new ResizeObserver(() => {
       centerWorkspace();
@@ -410,7 +407,7 @@ const App: React.FC = () => {
       observer.disconnect();
       clearTimeout(timer);
     };
-  }, [view, centerWorkspace]);
+  }, [centerWorkspace]);
 
   const handleTriggerAIVideo = (layerId: string) => {
     setAILayerId(layerId);
@@ -438,8 +435,8 @@ const App: React.FC = () => {
       }
 
       const videoUrl = await aiService.generateVideoFromImage(
-        frameDataUrl, 
-        prompt, 
+        frameDataUrl,
+        prompt,
         activePage.aspectRatio.includes('9:16') ? '9:16' : '16:9',
         (status) => setStatusText(status),
         useSimulation
@@ -536,31 +533,31 @@ const App: React.FC = () => {
 
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
-      const isInputActive = document.activeElement?.tagName === 'INPUT' || 
-                            document.activeElement?.tagName === 'TEXTAREA' ||
-                            isCanvasEditing;
+      const isInputActive = document.activeElement?.tagName === 'INPUT' ||
+        document.activeElement?.tagName === 'TEXTAREA' ||
+        isCanvasEditing;
 
       if (e.code === 'Space' && !isInputActive) {
         setIsSpacePressed(true);
         e.preventDefault();
       }
-      
+
       if (!isInputActive) {
         if (e.key.toLowerCase() === 'v') setActiveTool('select');
         if (e.key.toLowerCase() === 'h') setActiveTool('hand');
       }
-      
+
       if ((e.metaKey || e.ctrlKey) && e.key === '0') {
         e.preventDefault();
         centerWorkspace();
       }
 
       if (isInputActive) return;
-      
+
       if ((e.metaKey || e.ctrlKey) && e.key === 'z') { e.preventDefault(); if (e.shiftKey) handleRedo(); else handleUndo(); }
       if ((e.metaKey || e.ctrlKey) && e.key === 's') { e.preventDefault(); handleSaveProject(); }
       if ((e.metaKey || e.ctrlKey) && e.key === 'd') { e.preventDefault(); if (editorState.selectedLayerId) duplicateLayer(editorState.selectedLayerId); }
-      
+
       if (e.key === 'Backspace' || e.key === 'Delete') {
         if (editorState.selectedLayerId) {
           const newLayers = activePage.layers.filter(l => l.id !== editorState.selectedLayerId);
@@ -582,13 +579,9 @@ const App: React.FC = () => {
   const handleCanvasEditingToggle = (editing: boolean) => {
     setIsCanvasEditing(editing);
     if (editing) {
-      setActiveTool('select'); 
+      setActiveTool('select');
     }
   };
-
-  if (view === 'landing') {
-    return <LandingPage onStartEditing={() => setView('editor')} />;
-  }
 
   return (
     <div className="fixed inset-0 flex flex-col bg-zinc-950 text-zinc-100 overflow-hidden select-none z-[100]">
@@ -622,19 +615,19 @@ const App: React.FC = () => {
 
       <header className="h-14 border-b border-zinc-800 flex items-center justify-between px-6 bg-zinc-900 z-20 shadow-lg">
         <div className="flex items-center gap-6">
-          <button 
+          <button
             onClick={() => setView('landing')}
             className="p-2 hover:bg-zinc-800 rounded text-zinc-500 hover:text-white transition-colors"
           >
             <ChevronLeft size={18} />
           </button>
-          
+
           <div className="text-xl font-black tracking-tighter text-white flex items-center pr-6 border-r border-zinc-800 pointer-events-none select-none">
             batcho<span className="text-blue-500">Video</span>
             {editorState.isPro && (
-               <div className="px-1.5 py-0.5 rounded-full bg-pro-gradient text-white text-[8px] font-black uppercase tracking-tighter flex items-center gap-1 shadow-lg shadow-blue-500/20 ml-2">
-                 <Crown size={8} /> Pro
-               </div>
+              <div className="px-1.5 py-0.5 rounded-full bg-pro-gradient text-white text-[8px] font-black uppercase tracking-tighter flex items-center gap-1 shadow-lg shadow-blue-500/20 ml-2">
+                <Crown size={8} /> Pro
+              </div>
             )}
           </div>
 
@@ -651,8 +644,8 @@ const App: React.FC = () => {
             </div>
           </div>
           <div className="flex items-center gap-1 ml-4">
-             <button onClick={handleUndo} disabled={editorState.historyIndex <= 0} className="p-2 hover:bg-zinc-800 disabled:opacity-20 rounded transition-colors"><Undo2 size={18} /></button>
-             <button onClick={handleRedo} disabled={editorState.historyIndex >= editorState.history.length - 1} className="p-2 hover:bg-zinc-800 disabled:opacity-20 rounded transition-colors"><Redo2 size={18} /></button>
+            <button onClick={handleUndo} disabled={editorState.historyIndex <= 0} className="p-2 hover:bg-zinc-800 disabled:opacity-20 rounded transition-colors"><Undo2 size={18} /></button>
+            <button onClick={handleRedo} disabled={editorState.historyIndex >= editorState.history.length - 1} className="p-2 hover:bg-zinc-800 disabled:opacity-20 rounded transition-colors"><Redo2 size={18} /></button>
           </div>
         </div>
 
@@ -668,8 +661,8 @@ const App: React.FC = () => {
             {isExporting ? 'Exporting...' : 'Export'}
           </button>
           {!editorState.isPro && (
-            <button 
-              onClick={() => setShowProModal(true)} 
+            <button
+              onClick={() => setShowProModal(true)}
               className="flex items-center gap-2 px-4 py-2 bg-pro-gradient text-white text-sm font-bold rounded-lg shadow-lg shadow-blue-500/20 hover:scale-[1.02] transition-all active:scale-[0.98]"
             >
               <Sparkles size={14} />Buy Credits
@@ -680,12 +673,12 @@ const App: React.FC = () => {
 
       <div className="flex flex-1 overflow-hidden relative">
         <Toolbar onAddElement={handleAddElement} onToolSelect={setActiveTool} activeTool={activeTool} />
-        <main 
+        <main
           ref={workspaceRef}
           className={`flex-1 bg-zinc-950 relative overflow-hidden transition-all duration-75 ${isPanning || isSpacePressed || activeTool === 'hand' ? 'cursor-grabbing' : 'cursor-default'}`}
           onWheel={handleWheel} onMouseDown={handleMouseDown} onMouseMove={handleMouseMove} onMouseUp={handleMouseUp} onMouseLeave={handleMouseUp}
         >
-          <div 
+          <div
             className="absolute origin-top-left pointer-events-none"
             style={{ transform: `translate(${editorState.pan.x}px, ${editorState.pan.y}px) scale(${editorState.zoom})` }}
           >
@@ -704,14 +697,14 @@ const App: React.FC = () => {
                   {activeGuides && activeGuides.x !== undefined && <Line points={[activeGuides.x, 0, activeGuides.x, activePage.height]} stroke="#ff00ff" strokeWidth={1 / editorState.zoom} dash={[4 / editorState.zoom, 4 / editorState.zoom]} />}
                   {activeGuides && activeGuides.y !== undefined && <Line points={[0, activeGuides.y, activePage.width, activeGuides.y]} stroke="#ff00ff" strokeWidth={1 / editorState.zoom} dash={[4 / editorState.zoom, 4 / editorState.zoom]} />}
                   {activePage.layers.map((layer) => (
-                    <CanvasElement 
-                      key={layer.id} 
-                      layer={layer} 
-                      page={activePage} 
-                      isSelected={layer.id === editorState.selectedLayerId} 
-                      onSelect={() => { if (activeTool === 'select') setEditorState(prev => ({ ...prev, selectedLayerId: layer.id })); }} 
-                      onDragMove={setActiveGuides} 
-                      onChange={(updates) => updateLayer(layer.id, updates)} 
+                    <CanvasElement
+                      key={layer.id}
+                      layer={layer}
+                      page={activePage}
+                      isSelected={layer.id === editorState.selectedLayerId}
+                      onSelect={() => { if (activeTool === 'select') setEditorState(prev => ({ ...prev, selectedLayerId: layer.id })); }}
+                      onDragMove={setActiveGuides}
+                      onChange={(updates) => updateLayer(layer.id, updates)}
                       onEditingChange={handleCanvasEditingToggle}
                     />
                   ))}
@@ -721,7 +714,7 @@ const App: React.FC = () => {
           </div>
         </main>
 
-        <PropertiesPanel 
+        <PropertiesPanel
           pages={editorState.pages} activePageId={editorState.activePageId}
           selectedLayer={activePage.layers.find(l => l.id === editorState.selectedLayerId) || null}
           onUpdateLayer={updateLayer} onDuplicateLayer={duplicateLayer} onUpdatePage={updateActivePage}
