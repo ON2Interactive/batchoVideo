@@ -483,7 +483,27 @@ const App: React.FC<AppProps> = ({ initialProject, onBackToDashboard }) => {
         return;
       }
 
-      // VIDEO EXPORT
+      // VIDEO EXPORT - Browser compatibility check
+      const isChrome = /Chrome/.test(navigator.userAgent) && /Google Inc/.test(navigator.vendor);
+
+      if (isChrome) {
+        setIsExporting(false);
+        const userChoice = confirm(
+          "⚠️ Chrome Video Export Limitation\n\n" +
+          "Video export works best in Safari or Firefox due to browser limitations.\n\n" +
+          "Options:\n" +
+          "• Click OK to try anyway (may produce 0-byte files)\n" +
+          "• Click Cancel and use Safari/Firefox for reliable export\n\n" +
+          "Recommended: Use Safari for best results"
+        );
+
+        if (!userChoice) {
+          return; // User cancelled
+        }
+
+        setIsExporting(true);
+      }
+
       console.log('📹 Starting video export...');
       setStatusText("Synchronizing Frames...");
 
@@ -529,8 +549,8 @@ const App: React.FC<AppProps> = ({ initialProject, onBackToDashboard }) => {
       };
 
       setStatusText("Recording Scene...");
-      recorder.start();
-      console.log('🎬 Recording started');
+      recorder.start(100); // Request data every 100ms
+      console.log('🎬 Recording started with 100ms timeslice');
 
       // Start playing videos
       const playLayers = seekLayers.map(l => {
