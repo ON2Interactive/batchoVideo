@@ -1,13 +1,14 @@
 import React from 'react';
-import { ArrowRight, Video, Layers, Type, Download, Cloud, Zap, Play, Sparkles } from 'lucide-react';
+import { ArrowRight, Video, Layers, Type, Download, Cloud, Zap, Sparkles, Crown } from 'lucide-react';
 import Navigation from './components/Navigation';
 import Footer from './components/Footer';
 
 interface NewLandingPageProps {
     onStartEditing: () => void;
+    onBuyCredits: (planId: 'STARTER' | 'PRO' | 'BRAND') => void;
 }
 
-const NewLandingPage: React.FC<NewLandingPageProps> = ({ onStartEditing }) => {
+const NewLandingPage: React.FC<NewLandingPageProps> = ({ onStartEditing, onBuyCredits }) => {
     return (
         <div className="w-full bg-black text-white min-h-screen font-['Inter']">
             {/* Subtle Grid Pattern Background */}
@@ -300,14 +301,18 @@ const NewLandingPage: React.FC<NewLandingPageProps> = ({ onStartEditing }) => {
                                 </div>
                                 <h3 className="text-xl font-semibold">Starter Pack</h3>
                             </div>
-                            <div className="text-4xl font-bold">$5</div>
-                            <div className="text-emerald-400 font-semibold">5 credits</div>
+                            <div className="text-4xl font-bold">$10</div>
+                            <div className="text-emerald-400 font-semibold">600 credits</div>
                         </div>
 
                         <ul className="space-y-3 text-sm text-zinc-400">
                             <li className="flex items-center gap-2">
                                 <Download size={16} className="text-emerald-400" />
-                                Export → 1 credit
+                                10 credits / export
+                            </li>
+                            <li className="flex items-center gap-2">
+                                <Sparkles size={16} className="text-emerald-400" />
+                                10 credits / AI gen
                             </li>
                         </ul>
 
@@ -316,16 +321,16 @@ const NewLandingPage: React.FC<NewLandingPageProps> = ({ onStartEditing }) => {
                         </p>
 
                         <div className="text-xs text-emerald-400 font-semibold">
-                            ✓ + 3 Free Credits
+                            ✓ + 50 Free Credits for New Users
                         </div>
 
-                        <button onClick={onStartEditing} className="w-full py-3 bg-emerald-500 text-white rounded-full font-semibold hover:bg-emerald-600 transition-colors">
+                        <button onClick={() => onBuyCredits('STARTER')} className="w-full py-3 bg-emerald-500 text-white rounded-full font-semibold hover:bg-emerald-600 transition-colors">
                             Get Started
                         </button>
                     </div>
 
-                    {/* Creator Pack - Most Popular */}
-                    <div className="bg-zinc-900/30 backdrop-blur border-2 border-blue-500/50 rounded-2xl p-8 space-y-6 relative scale-105">
+                    {/* Pro Pack - Most Popular */}
+                    <div className="bg-zinc-900/30 backdrop-blur border-2 border-blue-500/50 rounded-2xl p-8 space-y-6 relative scale-105 shadow-2xl shadow-blue-900/20">
                         <div className="absolute -top-4 left-1/2 -translate-x-1/2 px-4 py-1 bg-blue-500 text-white text-xs font-bold rounded-full">
                             Most Popular
                         </div>
@@ -333,18 +338,22 @@ const NewLandingPage: React.FC<NewLandingPageProps> = ({ onStartEditing }) => {
                         <div className="space-y-2">
                             <div className="flex items-center gap-2">
                                 <div className="w-8 h-8 bg-blue-500/10 rounded-lg flex items-center justify-center">
-                                    <Video size={16} className="text-blue-400" />
+                                    <Crown size={16} className="text-blue-400" />
                                 </div>
-                                <h3 className="text-xl font-semibold">Creator Pack</h3>
+                                <h3 className="text-xl font-semibold">Pro Pack</h3>
                             </div>
-                            <div className="text-4xl font-bold">$15</div>
-                            <div className="text-blue-400 font-semibold">20 credits</div>
+                            <div className="text-4xl font-bold">$25</div>
+                            <div className="text-blue-400 font-semibold">1,800 credits</div>
                         </div>
 
                         <ul className="space-y-3 text-sm text-zinc-400">
                             <li className="flex items-center gap-2">
                                 <Download size={16} className="text-blue-400" />
-                                Export → 1 credit
+                                10 credits / export
+                            </li>
+                            <li className="flex items-center gap-2">
+                                <Sparkles size={16} className="text-blue-400" />
+                                10 credits / AI gen
                             </li>
                         </ul>
 
@@ -353,31 +362,35 @@ const NewLandingPage: React.FC<NewLandingPageProps> = ({ onStartEditing }) => {
                         </p>
 
                         <div className="text-xs text-blue-400 font-semibold">
-                            ✓ + 3 Free Credits
+                            ✓ + 50 Free Credits for New Users
                         </div>
 
-                        <button onClick={onStartEditing} className="w-full py-3 bg-blue-500 text-white rounded-full font-semibold hover:bg-blue-600 transition-colors">
+                        <button onClick={() => onBuyCredits('PRO')} className="w-full py-3 bg-blue-500 text-white rounded-full font-semibold hover:bg-blue-600 transition-colors">
                             Get Started
                         </button>
                     </div>
 
-                    {/* Pro Pack */}
+                    {/* Brand Pack */}
                     <div className="bg-zinc-900/30 backdrop-blur border border-zinc-800/50 rounded-2xl p-8 space-y-6 hover:border-violet-500/50 transition-all">
                         <div className="space-y-2">
                             <div className="flex items-center gap-2">
                                 <div className="w-8 h-8 bg-violet-500/10 rounded-lg flex items-center justify-center">
                                     <Layers size={16} className="text-violet-400" />
                                 </div>
-                                <h3 className="text-xl font-semibold">Pro Pack</h3>
+                                <h3 className="text-xl font-semibold">Brand Pack</h3>
                             </div>
-                            <div className="text-4xl font-bold">$30</div>
-                            <div className="text-violet-400 font-semibold">50 credits</div>
+                            <div className="text-4xl font-bold">$50</div>
+                            <div className="text-violet-400 font-semibold">4,000 credits</div>
                         </div>
 
                         <ul className="space-y-3 text-sm text-zinc-400">
                             <li className="flex items-center gap-2">
                                 <Download size={16} className="text-violet-400" />
-                                Export → 1 credit
+                                10 credits / export
+                            </li>
+                            <li className="flex items-center gap-2">
+                                <Sparkles size={16} className="text-violet-400" />
+                                10 credits / AI gen
                             </li>
                         </ul>
 
@@ -386,10 +399,10 @@ const NewLandingPage: React.FC<NewLandingPageProps> = ({ onStartEditing }) => {
                         </p>
 
                         <div className="text-xs text-violet-400 font-semibold">
-                            ✓ + 3 Free Credits
+                            ✓ + 50 Free Credits for New Users
                         </div>
 
-                        <button onClick={onStartEditing} className="w-full py-3 bg-violet-500 text-white rounded-full font-semibold hover:bg-violet-600 transition-colors">
+                        <button onClick={() => onBuyCredits('BRAND')} className="w-full py-3 bg-violet-500 text-white rounded-full font-semibold hover:bg-violet-600 transition-colors">
                             Get Started
                         </button>
                     </div>

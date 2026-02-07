@@ -5,17 +5,24 @@ import { X, Sparkles, Wand2, Info, Eye } from 'lucide-react';
 interface Props {
   onClose: () => void;
   onGenerate: (prompt: string, useSimulation: boolean) => void;
+  title?: string;
+  description?: string;
+  suggestions?: string[];
 }
 
-const AIModal: React.FC<Props> = ({ onClose, onGenerate }) => {
-  const [prompt, setPrompt] = useState('');
-
-  const suggestions = [
+const AIModal: React.FC<Props> = ({
+  onClose,
+  onGenerate,
+  title = "AI Motion Designer",
+  description = "Describe the motion",
+  suggestions = [
     "Make the clouds drift slowly across the sky.",
     "A subtle cinematic zoom into the subject.",
     "Gentle water ripples and reflections.",
     "Soft light flickering and wind blowing through leaves."
-  ];
+  ]
+}) => {
+  const [prompt, setPrompt] = useState('');
 
   return (
     <div className="fixed inset-0 z-[150] flex items-center justify-center p-6 bg-black/80 backdrop-blur-xl animate-in fade-in duration-300">
@@ -25,7 +32,7 @@ const AIModal: React.FC<Props> = ({ onClose, onGenerate }) => {
             <div className="w-8 h-8 bg-pro-gradient rounded-lg flex items-center justify-center text-white">
               <Sparkles size={18} />
             </div>
-            <h2 className="text-lg font-bold text-white tracking-tight">AI Motion Designer</h2>
+            <h2 className="text-lg font-bold text-white tracking-tight">{title}</h2>
           </div>
           <button onClick={onClose} className="p-2 hover:bg-white/5 rounded-full text-zinc-500 hover:text-white transition-colors">
             <X size={20} />
@@ -34,12 +41,12 @@ const AIModal: React.FC<Props> = ({ onClose, onGenerate }) => {
 
         <div className="p-6 space-y-6">
           <div className="space-y-3">
-            <label className="text-[10px] font-black text-zinc-500 uppercase tracking-[0.2em]">Describe the motion</label>
+            <label className="text-[10px] font-black text-zinc-500 uppercase tracking-[0.2em]">{description}</label>
             <textarea
               autoFocus
               value={prompt}
               onChange={(e) => setPrompt(e.target.value)}
-              placeholder="e.g. Cinematic slow motion with dust particles drifting in the light..."
+              placeholder="e.g. Change the background to a cyberpunk city..."
               className="w-full h-32 bg-zinc-800 border border-zinc-700 rounded-xl p-4 text-sm text-white focus:outline-none focus:border-blue-500 resize-none transition-colors"
             />
           </div>
@@ -87,5 +94,6 @@ const AIModal: React.FC<Props> = ({ onClose, onGenerate }) => {
     </div>
   );
 };
+
 
 export default AIModal;

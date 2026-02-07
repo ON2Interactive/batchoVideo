@@ -69,6 +69,34 @@ export const dbHelpers = {
         return { data, error };
     },
 
+    async initUserProfile(userId: string) {
+        // Check if profile exists
+        const { data: existingProfile } = await supabase
+            .from('profiles')
+            .select('*')
+            .eq('id', userId)
+            .single();
+
+        if (existingProfile) {
+            return { data: existingProfile, error: null };
+        }
+
+        // Create new profile with 50 free credits
+        const { data, error } = await supabase
+            .from('profiles')
+            .insert({
+                id: userId,
+                credits: 50,
+                is_admin: false,
+                created_at: new Date().toISOString(),
+                updated_at: new Date().toISOString()
+            })
+            .select()
+            .single();
+
+        return { data, error };
+    },
+
     async getUserProjects(userId: string) {
         const { data, error } = await supabase
             .from('projects')

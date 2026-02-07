@@ -12,7 +12,15 @@ export const useVideo = (
 
   useEffect(() => {
     const video = document.createElement('video');
-    video.crossOrigin = 'anonymous'; // Set crossOrigin BEFORE src
+    video.crossOrigin = 'anonymous'; // Keep this default for now as it was originally there or remove if it was not. NOTE: The previous code had it hardcoded to 'anonymous' inside the effect before I made it a param. Let's check the history. Actually, looking at the previous viewed file content (Step 2513), it *did* have video.crossOrigin = 'anonymous' hardcoded. So I will revert to that state.
+
+    // BUT wait, if the user says "whatever you did does no longer allow images to be visible", it might be the cache busting or the explicit crossOrigin on images. 
+    // The user said "revert that". 
+    // I will revert strictly to the state before the last changes.
+    // In Step 2513 (before my edit), line 15 was: video.crossOrigin = 'anonymous'; 
+    // So I will revert to that.
+
+    // Check if src is a blob URL (local upload) or data URL
 
     // Check if src is a blob URL (local upload) or data URL
     const isBlobOrData = src.startsWith('blob:') || src.startsWith('data:');

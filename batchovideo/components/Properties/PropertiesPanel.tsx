@@ -234,24 +234,54 @@ const PropertiesPanel: React.FC<Props> = ({
               </section>
             )}
 
-            {/* AI MAGIC SECTION - REMOVED STYLIZE, KEPT MOTION GEN FOR IMAGES ONLY */}
+            {/* AI MAGIC SECTION */}
             {selectedLayer.type === LayerType.IMAGE && (selectedLayer as ImageLayer).mediaType === 'image' && (
               <section className="pt-6 border-t border-zinc-800/50">
                 <div className="flex items-center gap-2 mb-4">
                   <Sparkles size={14} className="text-blue-400" />
-                  <h3 className="text-[11px] font-bold text-zinc-500 tracking-wider uppercase">Generative AI</h3>
+                  <h3 className="text-[11px] font-bold text-zinc-500 tracking-wider uppercase">AI Studio</h3>
                 </div>
-                <div className="bg-pro-gradient/5 border border-blue-500/20 rounded-xl p-4">
-                  <p className="text-[10px] text-zinc-400 leading-relaxed mb-3">
-                    Create cinematic motion using this image as a keyframe.
-                  </p>
-                  <button
-                    onClick={() => onGenerateVideo(selectedLayer.id)}
-                    className="w-full py-2 bg-pro-gradient hover:opacity-90 text-white rounded-lg text-xs font-bold flex items-center justify-center gap-2 transition-all active:scale-95 shadow-lg shadow-blue-500/10"
-                  >
-                    <Wand2 size={14} />
-                    AI Motion Gen
-                  </button>
+
+                <div className="space-y-3">
+                  {/* Nano Banana (Image Edit) - DISABLED FOR NOW */}
+                  <div className="bg-zinc-900/50 border border-zinc-800 rounded-xl p-3 opacity-50 relative overflow-hidden">
+                    <div className="flex items-center justify-between mb-2">
+                      <span className="text-[10px] font-bold text-zinc-300">Nano Banana Editor</span>
+                      <span className="text-[9px] text-zinc-500 bg-zinc-800 px-1.5 py-0.5 rounded">10 Credits</span>
+                    </div>
+                    <p className="text-[10px] text-zinc-500 leading-tight mb-3">
+                      Remix this image using Google Nano Banana logic.
+                    </p>
+                    <button
+                      disabled
+                      // onClick={() => onGenerateVideo(selectedLayer.id)}  <-- DISABLED 
+                      className="w-full py-2 bg-zinc-800 text-zinc-500 border border-zinc-700/50 rounded-lg text-xs font-bold flex items-center justify-center gap-2 cursor-not-allowed"
+                    >
+                      <Wand2 size={14} />
+                      Coming Soon
+                    </button>
+                    {/* <div className="absolute inset-0 bg-black/10 backdrop-blur-[1px] flex items-center justify-center">
+                        <span className="bg-black/80 text-white text-[10px] font-bold px-2 py-1 rounded">Maintenance</span>
+                    </div> */}
+                  </div>
+
+                  {/* FAL Kling (Video Gen) */}
+                  <div className="bg-pro-gradient/5 border border-blue-500/20 rounded-xl p-3">
+                    <div className="flex items-center justify-between mb-2">
+                      <span className="text-[10px] font-bold text-zinc-300">Kling Motion</span>
+                      <span className="text-[9px] text-zinc-500 bg-zinc-800 px-1.5 py-0.5 rounded">Pro</span>
+                    </div>
+                    <p className="text-[10px] text-zinc-400 leading-tight mb-3">
+                      Turn this static image into a video using Kling.
+                    </p>
+                    <button
+                      disabled // Pending key
+                      className="w-full py-2 bg-zinc-800 text-zinc-500 rounded-lg text-xs font-bold flex items-center justify-center gap-2 cursor-not-allowed"
+                    >
+                      <VideoIcon size={14} />
+                      Animate (Coming Soon)
+                    </button>
+                  </div>
                 </div>
               </section>
             )}

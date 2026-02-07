@@ -27,7 +27,8 @@ import ProjectGallery from './components/Editor/ProjectGallery';
 import ExportDialog, { ExportConfig } from './components/Editor/ExportDialog';
 import ProModal from './components/Modals/ProModal';
 import AIModal from './components/Modals/AIModal';
-import ChromeWarningModal from './components/Modals/ChromeWarningModal';
+import CreditsModal from './components/Modals/CreditsModal';
+
 
 import { aiService } from './aiService';
 import { dbHelpers, authHelpers, storageHelpers } from './lib/supabase';
@@ -46,7 +47,8 @@ import {
   Crown,
   Sparkles,
   Wand2,
-  ChevronLeft
+  ChevronLeft,
+  Zap
 } from 'lucide-react';
 
 interface AppProps {
@@ -76,12 +78,25 @@ const App: React.FC<AppProps> = ({ initialProject, onBackToDashboard }) => {
 
   // New State for Supabase Integration
   const [userId, setUserId] = useState<string | null>(null);
+  const [credits, setCredits] = useState<number>(0);
+  const [showCreditsModal, setShowCreditsModal] = useState(false);
   const [isNewProject, setIsNewProject] = useState(true);
 
-  // Initialize User
+  const handleBackClick = () => {
+    if (onBackToDashboard) onBackToDashboard();
+  };
+
+  // Initialize User & Credits
   useEffect(() => {
-    authHelpers.getCurrentUser().then(user => {
-      if (user) setUserId(user.id);
+    authHelpers.getCurrentUser().then(async (user) => {
+      if (user) {
+        setUserId(user.id);
+        // Initialize profile if needed (gets 50 free credits)
+        const { data } = await dbHelpers.initUserProfile(user.id);
+        if (data) {
+          setCredits(data.credits);
+        }
+      }
     });
   }, []);
 
@@ -146,6 +161,9 @@ const App: React.FC<AppProps> = ({ initialProject, onBackToDashboard }) => {
   const [activeGuides, setActiveGuides] = useState<{ x?: number, y?: number } | null>(null);
   const [isCanvasEditing, setIsCanvasEditing] = useState(false);
 
+  // AI State
+  const [aiMode, setAIMode] = useState<'motion' | 'edit_image' | 'edit_video' | null>(null);
+
   const workspaceRef = useRef<HTMLDivElement>(null);
   const stageRef = useRef<any>(null);
   const lastMousePos = useRef<Point>({ x: 0, y: 0 });
@@ -208,31 +226,26 @@ const App: React.FC<AppProps> = ({ initialProject, onBackToDashboard }) => {
 
       // Silent save logic (duplicated to avoid prop drilling / complex callback deps)
       const performAutosave = async () => {
-        // Don't set isSaving to true to avoid UI spinner flicker every 30s?
-        // Or keep it to show activity. Let's keep it.
-        // Actually, if I call handleSaveProject directly it won't use the LATEST ref values if I invoke it from here?
-        // No, handleSaveProject is a callback. 
-        // So I should replicate the save logic using `current` ref values.
+        // Prevent auto-saving if the project hasn't been manually saved at least once
+        if (current.isNewProject) {
+          console.log("Autosave skipped: Project is new and unsaved.");
+          return;
+        }
 
         try {
           // setIsSaving(true); // Optional: skip spinner for autosave
           const thumbnail = current.editorState.pages[0]?.thumbnail;
 
-          if (current.isNewProject) {
-            const result = await dbHelpers.saveProject(current.userId, current.projectName, current.editorState, thumbnail);
-            if (result.data) {
-              setProjectId(result.data.id);
-              setIsNewProject(false);
-            }
-          } else {
-            await dbHelpers.updateProject(current.projectId, current.projectName, current.editorState, thumbnail);
-          }
+          // Since we return early for new projects, we only need update logic here
+          await dbHelpers.updateProject(current.projectId, current.projectName, current.editorState, thumbnail);
+
           setLastSaved(Date.now());
+          console.log("Autosave complete.");
         } catch (e) { console.error("Autosave error:", e); }
         // finally {setIsSaving(false); }
       };
 
-      console.log("Triggering Autosave...");
+      console.log("Triggering Autosave Check...");
       performAutosave();
 
     }, 30000); // 30 seconds
@@ -325,6 +338,14 @@ const App: React.FC<AppProps> = ({ initialProject, onBackToDashboard }) => {
             tempVideo.src = url;
             tempVideo.onloadedmetadata = () => {
               const duration = tempVideo.duration;
+              const naturalWidth = tempVideo.videoWidth || 800;
+              const naturalHeight = tempVideo.videoHeight || 450;
+              const aspectRatio = naturalWidth / naturalHeight;
+
+              // Scale down if too big, max width 800
+              const width = Math.min(800, naturalWidth);
+              const height = width / aspectRatio;
+
               const newLayerId = uuidv4();
 
               const newLayer: ImageLayer = {
@@ -333,8 +354,8 @@ const App: React.FC<AppProps> = ({ initialProject, onBackToDashboard }) => {
                 type: LayerType.IMAGE,
                 x: 100,
                 y: 100,
-                width: 800,
-                height: 450,
+                width: width,
+                height: height,
                 rotation: 0,
                 opacity: 1,
                 src: url, // Start with Blob URL for instant preview
@@ -359,12 +380,6 @@ const App: React.FC<AppProps> = ({ initialProject, onBackToDashboard }) => {
                     alert("Video upload failed. It may disappear on refresh. Please use a smaller file or check your connection.");
                   } else if (data) {
                     console.log('✅ Background upload complete. Swapping URL.', data.url);
-                    // Update the layer with the permanent Cloud URL
-                    // We need to use a functional update to ensure we're updating the *current* state
-                    // However, updateLayer wrapper might rely on activePage state which is closed over.
-                    // Let's use the updateLayer function we have, but we need to be careful about closures.
-                    // Ideally we should dispatch a state update.
-
                     setEditorState(currentState => {
                       const currentActivePage = currentState.pages.find(p => p.id === currentState.activePageId);
                       if (!currentActivePage) return currentState;
@@ -373,16 +388,9 @@ const App: React.FC<AppProps> = ({ initialProject, onBackToDashboard }) => {
                         l.id === newLayerId ? { ...l, src: data.url } : l
                       );
 
-                      // We also need to update history
                       const newPages = currentState.pages.map(p =>
                         p.id === currentState.activePageId ? { ...p, layers: updatedLayers } : p
                       );
-
-                      // NOTE: We are NOT pushing to history here to avoid "Undo" undoing the URL swap 
-                      // and breaking the video if the blob is revoked.
-                      // Or maybe we SHOULD push to history? If we don't, history has the old blob URL.
-                      // If we do, the user has to undo twice to remove the video?
-                      // Let's just update the current state for now.
 
                       return {
                         ...currentState,
@@ -396,25 +404,36 @@ const App: React.FC<AppProps> = ({ initialProject, onBackToDashboard }) => {
               }
             };
           } else {
-            const newLayer: ImageLayer = {
-              id: uuidv4(),
-              name: 'Image',
-              type: LayerType.IMAGE,
-              x: 100,
-              y: 100,
-              width: 800,
-              height: 450,
-              rotation: 0,
-              opacity: 1,
-              src: url,
-              mediaType: 'image',
-              visible: true,
-              locked: false
-            };
-            updateActivePage({ layers: [...activePage.layers, newLayer] });
-            setEditorState(prev => ({ ...prev, selectedLayerId: newLayer.id }));
+            // IMAGE UPLOAD - Fix Aspect Ratio
+            const img = new Image();
+            img.src = url;
+            img.onload = () => {
+              const naturalWidth = img.naturalWidth || 800;
+              const naturalHeight = img.naturalHeight || 450;
+              const aspectRatio = naturalWidth / naturalHeight;
 
-            // TODO: Implement similar logic for Images if needed, but Video is the priority
+              // Scale down if too big, max width 800, but keep aspect ratio
+              const width = Math.min(800, naturalWidth);
+              const height = width / aspectRatio;
+
+              const newLayer: ImageLayer = {
+                id: uuidv4(),
+                name: 'Image',
+                type: LayerType.IMAGE,
+                x: 100,
+                y: 100,
+                width: width,
+                height: height,
+                rotation: 0,
+                opacity: 1,
+                src: url,
+                mediaType: 'image',
+                visible: true,
+                locked: false
+              };
+              updateActivePage({ layers: [...activePage.layers, newLayer] });
+              setEditorState(prev => ({ ...prev, selectedLayerId: newLayer.id }));
+            };
           }
         }
       };
@@ -563,8 +582,20 @@ const App: React.FC<AppProps> = ({ initialProject, onBackToDashboard }) => {
     };
   }, [centerWorkspace]);
 
+  // Center workspace whenever project ID changes (Load or New Project)
+  useEffect(() => {
+    // Small delay to ensure DOM and State are ready
+    const timer = setTimeout(() => {
+      centerWorkspace();
+    }, 100);
+    return () => clearTimeout(timer);
+  }, [projectId, centerWorkspace]);
+
+  /* --- AI GENERATION LOGIC --- */
+
   const handleTriggerAIVideo = (layerId: string) => {
     setAILayerId(layerId);
+    setAIMode('edit_image');
     setShowAIModal(true);
   };
 
@@ -574,50 +605,85 @@ const App: React.FC<AppProps> = ({ initialProject, onBackToDashboard }) => {
     const layer = activePage.layers.find(l => l.id === aiLayerId) as ImageLayer;
     if (!layer) return;
 
-    try {
-      setIsGenerating(true);
-      setStatusText("Preparing AI sequence...");
-      let frameDataUrl: string;
+    // Credit Check
+    const COST = 10;
+    if (credits < COST && !useSimulation) {
+      alert("Not enough credits! Please purchase more.");
+      setShowCreditsModal(true);
+      return;
+    }
 
-      if (layer.mediaType === 'video') {
-        setStatusText("Capturing reference keyframe...");
-        const konvaNode = stageRef.current.findOne('#' + layer.id);
-        if (!konvaNode) throw new Error("Could not find layer on stage.");
-        frameDataUrl = konvaNode.toDataURL({ pixelRatio: 1 });
+    setIsGenerating(true);
+    setStatusText(useSimulation ? "Running Neural Simulation..." : "Contacting Nano Banana...");
+
+    try {
+      let resultUrl = '';
+
+      if (useSimulation) {
+        await new Promise(resolve => setTimeout(resolve, 3000));
+        resultUrl = layer.src;
       } else {
-        frameDataUrl = layer.src;
+        // Real AI Execution
+
+        // 1. Deduct Credits
+        if (userId) {
+          const newCredits = credits - COST;
+          setCredits(newCredits);
+          // Fire and forget DB update
+          dbHelpers.updateUserCredits(userId, newCredits).catch(console.error);
+        }
+
+        // 2. Fetch Source Image
+        setStatusText("Uploading Source...");
+        const response = await fetch(layer.src);
+        const blob = await response.blob();
+
+        // 3. Calculate Aspect Ratio
+        // Simple approximation
+        const ratio = layer.width / layer.height;
+        let aspectRatio = "1:1";
+        if (ratio > 1.7) aspectRatio = "16:9";
+        else if (ratio < 0.6) aspectRatio = "9:16";
+        else if (ratio > 1.3) aspectRatio = "4:3";
+        else if (ratio < 0.8) aspectRatio = "3:4";
+
+        // 4. Call AI Service
+        setStatusText("Nano Banana Editors Working...");
+        // Use the top-level import now
+        const resultBlob = await aiServices.generateNanoBananaImage(blob, prompt, aspectRatio);
+
+        // 5. Upload Result
+        setStatusText("Saving to Gallery...");
+        if (userId) {
+          const file = new File([resultBlob], `edited_${Date.now()}.png`, { type: "image/png" });
+          const { data, error } = await storageHelpers.uploadVideo(userId, file, projectId);
+          if (error || !data) throw new Error("Upload failed");
+          resultUrl = data.url;
+        } else {
+          // Guest mode: Object URL
+          resultUrl = URL.createObjectURL(resultBlob);
+        }
       }
 
-      const videoUrl = await aiService.generateVideoFromImage(
-        frameDataUrl,
-        prompt,
-        activePage.aspectRatio.includes('9:16') ? '9:16' : '16:9',
-        (status) => setStatusText(status),
-        useSimulation
-      );
-
+      // 6. Update Layer Source
       updateLayer(aiLayerId, {
-        name: useSimulation ? 'AI Simulation Video' : 'AI Generated Video',
-        mediaType: 'video',
-        src: videoUrl,
-        playing: true,
-        loop: true,
-        volume: 1,
-        duration: 10
+        src: resultUrl,
       });
 
-    } catch (err) {
+      console.log('✅ AI Edit Complete. Layer updated.');
+
+    } catch (err: any) {
       console.error(err);
-      alert("AI Generation failed.");
+      alert(`AI Generation failed: ${err.message}`);
     } finally {
       setIsGenerating(false);
       setAILayerId(null);
+      setAIMode(null);
     }
   };
 
   /* --- EXPORT LOGIC --- */
-  const [showChromeWarning, setShowChromeWarning] = useState(false);
-  const [pendingExportConfig, setPendingExportConfig] = useState<ExportConfig | null>(null);
+
 
   const executeExport = async (config: ExportConfig) => {
     if (!stageRef.current) return;
@@ -734,25 +800,7 @@ const App: React.FC<AppProps> = ({ initialProject, onBackToDashboard }) => {
 
   const handleConfirmExport = (config: ExportConfig) => {
     setShowExportDialog(false);
-
-    // VIDEO EXPORT - Browser compatibility check
-    const isChrome = /Chrome/.test(navigator.userAgent) && /Google Inc/.test(navigator.vendor);
-
-    if (config.format === 'video' && isChrome) {
-      setPendingExportConfig(config);
-      setShowChromeWarning(true);
-      return;
-    }
-
     executeExport(config);
-  };
-
-  const handleChromeWarningConfirm = () => {
-    setShowChromeWarning(false);
-    if (pendingExportConfig) {
-      executeExport(pendingExportConfig);
-      setPendingExportConfig(null);
-    }
   };
 
   useEffect(() => {
@@ -807,19 +855,88 @@ const App: React.FC<AppProps> = ({ initialProject, onBackToDashboard }) => {
     }
   };
 
+
+  /* --- NEW PROJECT HANDLER --- */
+  const handleCreateNewProject = () => {
+    // Reset to a clean state
+    setProjectId(uuidv4());
+    setProjectName('Untitled Design');
+    setIsNewProject(true); // Enable new project state so it doesn't auto-save immediately
+    setLastSaved(null);
+
+    const initialPage: Page = {
+      id: DEFAULT_PAGE_ID,
+      name: 'Scene 1',
+      aspectRatio: '16:9',
+      width: ASPECT_RATIOS['16:9'].w,
+      height: ASPECT_RATIOS['16:9'].h,
+      backgroundColor: '#ffffff',
+      layers: [],
+    };
+
+    setEditorState({
+      pages: [initialPage],
+      activePageId: DEFAULT_PAGE_ID,
+      zoom: 0.1,
+      pan: { x: 0, y: 0 },
+      selectedLayerId: null,
+      history: [[initialPage]],
+      historyIndex: 0,
+      isPro: editorState.isPro
+    });
+
+    setShowGallery(false);
+  };
+
   return (
     <div className="fixed inset-0 flex flex-col bg-zinc-950 text-zinc-100 overflow-hidden select-none z-[100]">
-      {showGallery && <ProjectGallery onClose={() => setShowGallery(false)} onLoadProject={handleLoadProject} />}
-      {showExportDialog && <ExportDialog onClose={() => setShowGallery(false)} onConfirm={handleConfirmExport} aspectRatio={activePage.aspectRatio} currentWidth={activePage.width} currentHeight={activePage.height} hasVideo={hasVideo} suggestedDuration={maxVideoDuration} isPro={editorState.isPro} onShowPro={() => setShowProModal(true)} />}
+      {showGallery && (
+        <ProjectGallery
+          onClose={() => setShowGallery(false)}
+          onLoadProject={handleLoadProject}
+          onNewProject={handleCreateNewProject}
+        />
+      )}
+      {showExportDialog && <ExportDialog onClose={() => setShowExportDialog(false)} onConfirm={handleConfirmExport} aspectRatio={activePage.aspectRatio} currentWidth={activePage.width} currentHeight={activePage.height} hasVideo={hasVideo} suggestedDuration={maxVideoDuration} isPro={editorState.isPro} onShowPro={() => setShowProModal(true)} />}
       {showProModal && <ProModal onClose={() => setShowProModal(false)} onUpgrade={handleUpgrade} />}
       {showAIModal && <AIModal onClose={() => setShowAIModal(false)} onGenerate={handleConfirmAI} />}
-      {showChromeWarning && (
-        <ChromeWarningModal
-          onClose={() => { setShowChromeWarning(false); setPendingExportConfig(null); }}
-          onConfirm={handleChromeWarningConfirm}
+
+      {showCreditsModal && (
+        <CreditsModal
+          onClose={() => setShowCreditsModal(false)}
+          onPurchase={(amount, reset = false) => {
+            if (reset) {
+              setCredits(amount);
+              if (userId) dbHelpers.updateUserCredits(userId, amount);
+            } else {
+              setCredits(prev => {
+                const newVal = prev + amount;
+                if (userId) dbHelpers.updateUserCredits(userId, newVal);
+                return newVal;
+              });
+            }
+            setShowCreditsModal(false);
+          }}
         />
       )}
 
+      {/* AI LOADING OVERLAY */}
+      {isGenerating && (
+        <div className="fixed inset-0 z-[200] flex flex-col items-center justify-center bg-black/80 backdrop-blur-sm animate-in fade-in duration-300">
+          <div className="flex flex-col items-center gap-6 p-8 bg-zinc-900/90 border border-white/10 rounded-3xl shadow-2xl max-w-sm text-center">
+            <div className="relative">
+              <div className="w-16 h-16 border-4 border-blue-500/30 border-t-blue-500 rounded-full animate-spin"></div>
+              <div className="absolute inset-0 flex items-center justify-center">
+                <Sparkles size={20} className="text-white animate-pulse" />
+              </div>
+            </div>
+            <div className="space-y-2">
+              <h3 className="text-xl font-bold text-white tracking-tight">Creating Magic</h3>
+              <p className="text-sm text-zinc-400">{statusText || "Processing..."}</p>
+            </div>
+          </div>
+        </div>
+      )}
       {(isExporting || isGenerating) && (
         <div className="fixed inset-0 bg-black/80 z-[300] flex flex-col items-center justify-center gap-6 backdrop-blur-md animate-in fade-in duration-300">
           {isGenerating ? (
@@ -843,37 +960,56 @@ const App: React.FC<AppProps> = ({ initialProject, onBackToDashboard }) => {
         </div>
       )}
 
-      <header className="h-14 border-b border-zinc-800 flex items-center justify-between px-6 bg-zinc-900 z-20 shadow-lg">
-        <div className="flex items-center gap-6">
-          {onBackToDashboard && (
-            <button
-              onClick={onBackToDashboard}
-              className="p-2 hover:bg-zinc-800 rounded text-zinc-500 hover:text-white transition-colors"
-            >
-              <ChevronLeft size={18} />
-            </button>
-          )}
-
-          <div className="text-xl font-black tracking-tighter text-white flex items-center pr-6 border-r border-zinc-800 pointer-events-none select-none">
-            batcho<span className="text-blue-500">Video</span>
-            {editorState.isPro && (
-              <div className="px-1.5 py-0.5 rounded-full bg-pro-gradient text-white text-[8px] font-black uppercase tracking-tighter flex items-center gap-1 shadow-lg shadow-blue-500/20 ml-2">
-                <Crown size={8} /> Pro
-              </div>
-            )}
+      {/* Header Bar */}
+      <div className="h-16 bg-[#0f0f11] border-b border-zinc-800 flex items-center px-4 justify-between select-none z-50">
+        <div className="flex items-center gap-4">
+          <button
+            onClick={handleBackClick}
+            className="p-2 hover:bg-zinc-800 rounded-lg text-zinc-400 hover:text-white transition-colors"
+            title="Back to Dashboard"
+          >
+            <ChevronLeft size={20} />
+          </button>
+          <div className="flex flex-col">
+            <input
+              type="text"
+              value={projectName}
+              onChange={(e) => setProjectName(e.target.value)}
+              className="bg-transparent text-white font-medium focus:outline-none focus:ring-1 focus:ring-blue-500 rounded px-1 -ml-1 w-48"
+              placeholder="Untitled Project"
+            />
+            <span className="text-[10px] text-zinc-500">
+              {lastSaved ? `Saved ${new Date(lastSaved).toLocaleTimeString()}` : 'Unsaved changes'}
+            </span>
+          </div>
+          {/* Credits Display */}
+          <div className="h-8 w-px bg-zinc-800 mx-2" />
+          <div className={`flex items-center gap-2 px-3 py-1.5 rounded-full border border-zinc-800 bg-zinc-900/50 ${credits <= 0 ? 'text-red-400 border-red-500/30 bg-red-500/10' : 'text-zinc-400'}`}>
+            <Zap size={14} className={credits <= 0 ? 'text-red-500' : 'text-zinc-500'} />
+            <span className="text-xs font-bold">{credits} Credits</span>
           </div>
 
-          <div className="flex items-center gap-3">
-            <input type="text" value={projectName} onChange={(e) => setProjectName(e.target.value)} className="bg-transparent border-none text-sm font-bold text-zinc-300 focus:text-white focus:outline-none focus:ring-0 min-w-[200px] hover:bg-white/5 px-2 py-1 rounded transition-colors" />
-            <div className="flex items-center gap-1.5 ml-2">
-              <button onClick={handleSaveProject} disabled={isSaving} className="flex items-center gap-2 px-4 py-2 bg-zinc-800 hover:bg-zinc-700 disabled:bg-zinc-800 text-sm font-bold text-zinc-300 rounded-lg transition-all border border-zinc-700/50">
-                {isSaving ? <Loader2 size={16} className="animate-spin" /> : lastSaved ? <CheckCircle2 size={16} className="text-emerald-500" /> : <Save size={16} />}
-                {isSaving ? 'Saving' : lastSaved ? 'Saved' : 'Save'}
-              </button>
-              <button onClick={() => setShowGallery(true)} className="flex items-center gap-2 px-4 py-2 bg-zinc-800 hover:bg-zinc-700 text-sm font-bold text-zinc-300 rounded-lg transition-all border border-zinc-700/50">
-                <Library size={16} /> Open
-              </button>
-            </div>
+          {/* Pulse Buy Button if Out of Credits */}
+          {credits <= 0 && (
+            <button
+              onClick={() => setShowCreditsModal(true)}
+              className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-blue-600 hover:bg-blue-500 text-white text-xs font-bold shadow-[0_0_15px_rgba(37,99,235,0.5)] animate-pulse transition-all"
+            >
+              <Crown size={14} />
+              Buy Credits
+            </button>
+          )}
+        </div>
+
+        <div className="flex items-center gap-3">
+          <div className="flex items-center gap-1.5 ml-2">
+            <button onClick={handleSaveProject} disabled={isSaving} className="flex items-center gap-2 px-4 py-2 bg-zinc-800 hover:bg-zinc-700 disabled:bg-zinc-800 text-sm font-bold text-zinc-300 rounded-lg transition-all border border-zinc-700/50">
+              {isSaving ? <Loader2 size={16} className="animate-spin" /> : lastSaved ? <CheckCircle2 size={16} className="text-emerald-500" /> : <Save size={16} />}
+              {isSaving ? 'Saving' : lastSaved ? 'Saved' : 'Save'}
+            </button>
+            <button onClick={() => setShowGallery(true)} className="flex items-center gap-2 px-4 py-2 bg-zinc-800 hover:bg-zinc-700 text-sm font-bold text-zinc-300 rounded-lg transition-all border border-zinc-700/50">
+              <Library size={16} /> Open
+            </button>
           </div>
           <div className="flex items-center gap-1 ml-4">
             <button onClick={handleUndo} disabled={editorState.historyIndex <= 0} className="p-2 hover:bg-zinc-800 disabled:opacity-20 rounded transition-colors"><Undo2 size={18} /></button>
@@ -894,14 +1030,14 @@ const App: React.FC<AppProps> = ({ initialProject, onBackToDashboard }) => {
           </button>
           {!editorState.isPro && (
             <button
-              onClick={() => setShowProModal(true)}
+              onClick={() => setShowCreditsModal(true)}
               className="flex items-center gap-2 px-4 py-2 bg-pro-gradient text-white text-sm font-bold rounded-lg shadow-lg shadow-blue-500/20 hover:scale-[1.02] transition-all active:scale-[0.98]"
             >
               <Sparkles size={14} />Buy Credits
             </button>
           )}
         </div>
-      </header>
+      </div>
 
       <div className="flex flex-1 overflow-hidden relative">
         <Toolbar onAddElement={handleAddElement} onToolSelect={setActiveTool} activeTool={activeTool} />
@@ -980,7 +1116,7 @@ const App: React.FC<AppProps> = ({ initialProject, onBackToDashboard }) => {
           }}
         />
       </div>
-    </div>
+    </div >
   );
 };
 

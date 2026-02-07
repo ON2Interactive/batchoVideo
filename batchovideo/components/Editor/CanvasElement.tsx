@@ -35,6 +35,7 @@ const CanvasElement: React.FC<Props> = ({
   const isVideo = layer.type === LayerType.IMAGE && (layer as ImageLayer).mediaType === 'video';
   const isImage = layer.type === LayerType.IMAGE && (layer as ImageLayer).mediaType === 'image';
 
+  /* --- VIDEO ELEMENT HANDLING --- */
   const videoElement = isVideo
     ? useVideo(
       (layer as ImageLayer).src,
@@ -49,9 +50,24 @@ const CanvasElement: React.FC<Props> = ({
 
   useEffect(() => {
     if (isImage) {
+      // Strategy: Try loading with CORS first (required for export).
+      // If that fails (Supabase bucket not configured), fall back to non-CORS (visible but taints canvas).
       const img = new window.Image();
-      img.src = (layer as ImageLayer).src;
+      const originalSrc = (layer as ImageLayer).src;
+
+      img.crossOrigin = 'Anonymous';
+      const separator = originalSrc.includes('?') ? '&' : '?';
+      img.src = `${originalSrc}${separator}t=${Date.now()}`; // Bypass cache
+
       img.onload = () => setImageElement(img);
+
+      img.onerror = () => {
+        // Fallback: Load without CORS
+        console.warn(`Failed to load image with CORS: ${originalSrc}. Falling back to non-CORS mode (Export may fail).`);
+        const fallbackImg = new window.Image();
+        fallbackImg.src = originalSrc;
+        fallbackImg.onload = () => setImageElement(fallbackImg);
+      };
     } else {
       setImageElement(null);
     }

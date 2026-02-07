@@ -8,6 +8,7 @@ import NewLandingPage from './NewLandingPage';
 import { AdminDashboard } from './components/Admin/AdminDashboard';
 import { AdminLoginPage } from './components/Auth/AdminLoginPage';
 import { adminHelpers } from './lib/supabase';
+import { STRIPE_CONFIG } from './stripeConfig';
 
 import { useLocation } from 'react-router-dom';
 import ContactPage from './components/ContactPage';
@@ -21,11 +22,19 @@ const AppRouter: React.FC = () => {
     const [currentProject, setCurrentProject] = useState<any>(null);
     const [isAdmin, setIsAdmin] = useState(false);
     const [isAdminAuthenticated, setIsAdminAuthenticated] = useState(false);
+    const [pendingPlan, setPendingPlan] = useState<string | null>(null);
     const location = useLocation();
 
     useEffect(() => {
         checkAuth();
         checkAdminAuth();
+
+        // Check for payment success
+        const params = new URLSearchParams(window.location.search);
+        if (params.get('payment') === 'success') {
+            window.history.replaceState({}, '', '/editor');
+            setView('editor');
+        }
     }, [isAdminAuthenticated]);
 
     useEffect(() => {
@@ -124,8 +133,14 @@ const AppRouter: React.FC = () => {
     };
 
     const handleSignupSuccess = () => {
-        window.history.pushState({}, '', '/dashboard');
-        setView('dashboard');
+        if (pendingPlan && STRIPE_CONFIG.LINKS[pendingPlan as keyof typeof STRIPE_CONFIG.LINKS]) {
+            // Redirect to Stripe if there was a pending plan
+            window.location.href = STRIPE_CONFIG.LINKS[pendingPlan as keyof typeof STRIPE_CONFIG.LINKS];
+        } else {
+            window.history.pushState({}, '', '/dashboard');
+            setView('dashboard');
+        }
+        setPendingPlan(null);
     };
 
     const handleLogout = () => {
@@ -150,6 +165,21 @@ const AppRouter: React.FC = () => {
         window.history.pushState({}, '', '/dashboard');
         setView('dashboard');
         setCurrentProject(null);
+    };
+
+    const handleBuyCredits = async (planId: string) => {
+        const session = await authHelpers.getSession();
+        if (session) {
+            // User is logged in, go straight to Stripe
+            if (STRIPE_CONFIG.LINKS[planId as keyof typeof STRIPE_CONFIG.LINKS]) {
+                window.location.href = STRIPE_CONFIG.LINKS[planId as keyof typeof STRIPE_CONFIG.LINKS];
+            }
+        } else {
+            // User not logged in, go to signup first
+            setPendingPlan(planId);
+            window.history.pushState({}, '', '/signup');
+            setView('signup');
+        }
     };
 
     if (loading) {
@@ -177,7 +207,10 @@ const AppRouter: React.FC = () => {
 
     if (view === 'landing') {
         return (
-            <NewLandingPage onStartEditing={() => setView('signup')} />
+            <NewLandingPage
+                onStartEditing={() => setView('signup')}
+                onBuyCredits={handleBuyCredits}
+            />
         );
     }
 
