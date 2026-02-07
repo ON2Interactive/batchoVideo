@@ -84,7 +84,8 @@ const Footer: React.FC = () => {
                                 fontSize: '0.875rem',
                                 fontWeight: '600',
                                 marginBottom: '1rem',
-                                textTransform: 'uppercase',
+                                fontWeight: '600',
+                                marginBottom: '1rem',
                                 letterSpacing: '0.05em',
                             }}>
                                 {section.title}
