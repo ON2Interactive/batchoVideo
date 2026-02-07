@@ -13,7 +13,10 @@ export const useVideo = (
   useEffect(() => {
     const video = document.createElement('video');
     video.crossOrigin = 'anonymous'; // Set crossOrigin BEFORE src
-    video.src = src;
+    // Append a cache-busting parameter to ensure we get a fresh response with correct CORS headers
+    // This fixes issues where the browser uses a cached opaque response
+    const cacheBuster = src.includes('?') ? `&t=${Date.now()}` : `?t=${Date.now()}`;
+    video.src = `${src}${cacheBuster}`;
     video.loop = loop;
     video.muted = volume === 0;
     video.volume = volume;
