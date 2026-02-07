@@ -261,21 +261,7 @@ const PropertiesPanel: React.FC<Props> = ({
                 <h3 className="text-[11px] font-bold text-zinc-500 tracking-wider mb-4 uppercase">Video Engine</h3>
                 <div className="space-y-5">
                   {/* Video Effects Dropdown */}
-                  <div className="flex flex-col gap-1.5">
-                    <label className="text-[10px] text-zinc-500 font-semibold flex items-center gap-1.5">
-                      <Palette size={12} />
-                      Video Effects
-                    </label>
-                    <select
-                      value={(selectedLayer as ImageLayer).filter || 'none'}
-                      onChange={(e) => handleLayerChange({ filter: e.target.value })}
-                      className="bg-zinc-800 border border-zinc-700 rounded px-3 h-9 text-xs text-white focus:outline-none focus:border-blue-500 cursor-pointer"
-                    >
-                      {VIDEO_EFFECTS.map(effect => (
-                        <option key={effect.id} value={effect.id}>{effect.name}</option>
-                      ))}
-                    </select>
-                  </div>
+
                   <div className="flex items-center justify-between gap-3">
                     <button onClick={() => handleLayerChange({ playing: !(selectedLayer as ImageLayer).playing })} className={`flex items-center justify-center gap-2 px-4 h-11 rounded-lg text-xs font-bold transition-all flex-1 shadow-lg active:scale-95 ${(selectedLayer as ImageLayer).playing ? 'bg-zinc-800 text-zinc-400 hover:text-white border border-zinc-700' : 'bg-blue-600 hover:bg-blue-500 text-white'}`}>
                       {(selectedLayer as ImageLayer).playing ? <Pause size={16} fill="currentColor" /> : <Play size={16} fill="currentColor" />}

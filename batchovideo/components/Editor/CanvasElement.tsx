@@ -57,38 +57,12 @@ const CanvasElement: React.FC<Props> = ({
     }
   }, [isImage, (layer as ImageLayer).src]);
 
+  // Video filter logic removed to improve stability
   useEffect(() => {
     if (videoElement && shapeRef.current) {
-      const node = shapeRef.current;
-      const layerNode = node.getLayer();
-      if (!layerNode) return;
-
-      const anim = new Konva.Animation(() => {
-        // If filter is active, we must re-cache to update the frame for the filter to apply
-        if ((layer as ImageLayer).filter && (layer as ImageLayer).filter !== 'none') {
-          // CRITICAL: Only cache if video has enough data. 
-          // Caching an unready video results in a blank canvas (invisible video).
-          if (videoElement.readyState >= 2) {
-            try {
-              node.cache();
-            } catch (e) {
-              // Handle cache errors
-            }
-          } else {
-            node.clearCache(); // Ensure we don't show a stale or blank cache
-          }
-        } else {
-          node.clearCache();
-        }
-      }, layerNode);
-
-      anim.start();
-      return () => {
-        anim.stop();
-        node.clearCache();
-      };
+      shapeRef.current.clearCache();
     }
-  }, [videoElement, (layer as ImageLayer).filter]);
+  }, [videoElement]);
 
   useEffect(() => {
     if (isSelected && trRef.current && shapeRef.current && !isEditing && !layer.locked) {
@@ -293,37 +267,11 @@ const CanvasElement: React.FC<Props> = ({
       case LayerType.IMAGE: {
         const il = layer as ImageLayer;
 
-        let activeFilters: any[] = [];
-        let effectProps = {};
-
-        if (il.mediaType === 'video' && il.filter && il.filter !== 'none') {
-          const config = getEffectConfig(il.filter);
-          if (config) {
-            if (config.contrast !== undefined) activeFilters.push(Konva.Filters.Contrast);
-            if (config.brightness !== undefined) activeFilters.push(Konva.Filters.Brighten);
-            if (config.saturation !== undefined) activeFilters.push(Konva.Filters.HSV); // Saturation uses HSV
-            if (config.red !== undefined || config.green !== undefined || config.blue !== undefined) activeFilters.push(Konva.Filters.RGB);
-            // Grayscale check
-            if (il.filter === 'bw' || il.filter === 'noir') activeFilters.push(Konva.Filters.Grayscale);
-
-            effectProps = {
-              contrast: config.contrast,
-              brightness: config.brightness,
-              saturation: config.saturation, // HSV
-              red: config.red,
-              green: config.green,
-              blue: config.blue
-            };
-          }
-        }
-
         if (il.mediaType === 'video' && videoElement) {
           return (
             <KonvaImage
               {...commonProps}
               image={videoElement}
-              filters={activeFilters}
-              {...effectProps}
             />
           );
         }
