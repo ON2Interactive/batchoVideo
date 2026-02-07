@@ -66,10 +66,16 @@ const CanvasElement: React.FC<Props> = ({
       const anim = new Konva.Animation(() => {
         // If filter is active, we must re-cache to update the frame for the filter to apply
         if ((layer as ImageLayer).filter && (layer as ImageLayer).filter !== 'none') {
-          try {
-            node.cache();
-          } catch (e) {
-            // Handle cache errors (e.g. 0 dimensions)
+          // CRITICAL: Only cache if video has enough data. 
+          // Caching an unready video results in a blank canvas (invisible video).
+          if (videoElement.readyState >= 2) {
+            try {
+              node.cache();
+            } catch (e) {
+              // Handle cache errors
+            }
+          } else {
+            node.clearCache(); // Ensure we don't show a stale or blank cache
           }
         } else {
           node.clearCache();
