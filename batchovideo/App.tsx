@@ -27,9 +27,10 @@ import ProjectGallery from './components/Editor/ProjectGallery';
 import ExportDialog, { ExportConfig } from './components/Editor/ExportDialog';
 import ProModal from './components/Modals/ProModal';
 import AIModal from './components/Modals/AIModal';
+import ChromeWarningModal from './components/Modals/ChromeWarningModal';
 
 import { aiService } from './aiService';
-import { dbHelpers, authHelpers } from './lib/supabase';
+import { dbHelpers, authHelpers, storageHelpers } from './lib/supabase';
 // import { db } from './db'; // Removing IDB dependency for Project saving
 import {
   Download,
@@ -313,7 +314,7 @@ const App: React.FC<AppProps> = ({ initialProject, onBackToDashboard }) => {
       const input = document.createElement('input');
       input.type = 'file';
       input.accept = type === 'IMAGE_UPLOAD' ? 'image/*' : 'video/*';
-      input.onchange = (e) => {
+      input.onchange = async (e) => {
         const file = (e.target as HTMLInputElement).files?.[0];
         if (file) {
           const url = URL.createObjectURL(file);
@@ -324,8 +325,10 @@ const App: React.FC<AppProps> = ({ initialProject, onBackToDashboard }) => {
             tempVideo.src = url;
             tempVideo.onloadedmetadata = () => {
               const duration = tempVideo.duration;
+              const newLayerId = uuidv4();
+
               const newLayer: ImageLayer = {
-                id: uuidv4(),
+                id: newLayerId,
                 name: 'Video',
                 type: LayerType.IMAGE,
                 x: 100,
@@ -334,7 +337,7 @@ const App: React.FC<AppProps> = ({ initialProject, onBackToDashboard }) => {
                 height: 450,
                 rotation: 0,
                 opacity: 1,
-                src: url,
+                src: url, // Start with Blob URL for instant preview
                 mediaType: 'video',
                 playing: true,
                 loop: true,
@@ -346,6 +349,51 @@ const App: React.FC<AppProps> = ({ initialProject, onBackToDashboard }) => {
               };
               updateActivePage({ layers: [...activePage.layers, newLayer] });
               setEditorState(prev => ({ ...prev, selectedLayerId: newLayer.id }));
+
+              // Background Upload to Supabase
+              if (userId) {
+                console.log('☁️ Starting background upload for video...');
+                storageHelpers.uploadVideo(userId, file, projectId).then(({ data, error }) => {
+                  if (error) {
+                    console.error('❌ Background upload failed:', error);
+                    alert("Video upload failed. It may disappear on refresh. Please use a smaller file or check your connection.");
+                  } else if (data) {
+                    console.log('✅ Background upload complete. Swapping URL.', data.url);
+                    // Update the layer with the permanent Cloud URL
+                    // We need to use a functional update to ensure we're updating the *current* state
+                    // However, updateLayer wrapper might rely on activePage state which is closed over.
+                    // Let's use the updateLayer function we have, but we need to be careful about closures.
+                    // Ideally we should dispatch a state update.
+
+                    setEditorState(currentState => {
+                      const currentActivePage = currentState.pages.find(p => p.id === currentState.activePageId);
+                      if (!currentActivePage) return currentState;
+
+                      const updatedLayers = currentActivePage.layers.map(l =>
+                        l.id === newLayerId ? { ...l, src: data.url } : l
+                      );
+
+                      // We also need to update history
+                      const newPages = currentState.pages.map(p =>
+                        p.id === currentState.activePageId ? { ...p, layers: updatedLayers } : p
+                      );
+
+                      // NOTE: We are NOT pushing to history here to avoid "Undo" undoing the URL swap 
+                      // and breaking the video if the blob is revoked.
+                      // Or maybe we SHOULD push to history? If we don't, history has the old blob URL.
+                      // If we do, the user has to undo twice to remove the video?
+                      // Let's just update the current state for now.
+
+                      return {
+                        ...currentState,
+                        pages: newPages
+                      };
+                    });
+                  }
+                });
+              } else {
+                console.warn("⚠️ User not logged in. Video will not be saved to cloud.");
+              }
             };
           } else {
             const newLayer: ImageLayer = {
@@ -365,6 +413,8 @@ const App: React.FC<AppProps> = ({ initialProject, onBackToDashboard }) => {
             };
             updateActivePage({ layers: [...activePage.layers, newLayer] });
             setEditorState(prev => ({ ...prev, selectedLayerId: newLayer.id }));
+
+            // TODO: Implement similar logic for Images if needed, but Video is the priority
           }
         }
       };
@@ -565,8 +615,11 @@ const App: React.FC<AppProps> = ({ initialProject, onBackToDashboard }) => {
     }
   };
 
-  const handleConfirmExport = async (config: ExportConfig) => {
-    setShowExportDialog(false);
+  /* --- EXPORT LOGIC --- */
+  const [showChromeWarning, setShowChromeWarning] = useState(false);
+  const [pendingExportConfig, setPendingExportConfig] = useState<ExportConfig | null>(null);
+
+  const executeExport = async (config: ExportConfig) => {
     if (!stageRef.current) return;
     try {
       console.log('🎬 Export started:', config);
@@ -585,27 +638,6 @@ const App: React.FC<AppProps> = ({ initialProject, onBackToDashboard }) => {
         setIsExporting(false);
         console.log('✅ PNG export complete');
         return;
-      }
-
-      // VIDEO EXPORT - Browser compatibility check
-      const isChrome = /Chrome/.test(navigator.userAgent) && /Google Inc/.test(navigator.vendor);
-
-      if (isChrome) {
-        setIsExporting(false);
-        const userChoice = confirm(
-          "⚠️ Chrome Video Export Limitation\n\n" +
-          "Video export works best in Safari or Firefox due to browser limitations.\n\n" +
-          "Options:\n" +
-          "• Click OK to try anyway (may produce 0-byte files)\n" +
-          "• Click Cancel and use Safari/Firefox for reliable export\n\n" +
-          "Recommended: Use Safari for best results"
-        );
-
-        if (!userChoice) {
-          return; // User cancelled
-        }
-
-        setIsExporting(true);
       }
 
       console.log('📹 Starting video export...');
@@ -700,6 +732,29 @@ const App: React.FC<AppProps> = ({ initialProject, onBackToDashboard }) => {
     }
   };
 
+  const handleConfirmExport = (config: ExportConfig) => {
+    setShowExportDialog(false);
+
+    // VIDEO EXPORT - Browser compatibility check
+    const isChrome = /Chrome/.test(navigator.userAgent) && /Google Inc/.test(navigator.vendor);
+
+    if (config.format === 'video' && isChrome) {
+      setPendingExportConfig(config);
+      setShowChromeWarning(true);
+      return;
+    }
+
+    executeExport(config);
+  };
+
+  const handleChromeWarningConfirm = () => {
+    setShowChromeWarning(false);
+    if (pendingExportConfig) {
+      executeExport(pendingExportConfig);
+      setPendingExportConfig(null);
+    }
+  };
+
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       const isInputActive = document.activeElement?.tagName === 'INPUT' ||
@@ -758,6 +813,12 @@ const App: React.FC<AppProps> = ({ initialProject, onBackToDashboard }) => {
       {showExportDialog && <ExportDialog onClose={() => setShowGallery(false)} onConfirm={handleConfirmExport} aspectRatio={activePage.aspectRatio} currentWidth={activePage.width} currentHeight={activePage.height} hasVideo={hasVideo} suggestedDuration={maxVideoDuration} isPro={editorState.isPro} onShowPro={() => setShowProModal(true)} />}
       {showProModal && <ProModal onClose={() => setShowProModal(false)} onUpgrade={handleUpgrade} />}
       {showAIModal && <AIModal onClose={() => setShowAIModal(false)} onGenerate={handleConfirmAI} />}
+      {showChromeWarning && (
+        <ChromeWarningModal
+          onClose={() => { setShowChromeWarning(false); setPendingExportConfig(null); }}
+          onConfirm={handleChromeWarningConfirm}
+        />
+      )}
 
       {(isExporting || isGenerating) && (
         <div className="fixed inset-0 bg-black/80 z-[300] flex flex-col items-center justify-center gap-6 backdrop-blur-md animate-in fade-in duration-300">
