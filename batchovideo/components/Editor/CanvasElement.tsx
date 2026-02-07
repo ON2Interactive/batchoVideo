@@ -60,7 +60,20 @@ const CanvasElement: React.FC<Props> = ({
   // Video filter logic removed to improve stability
   useEffect(() => {
     if (videoElement && shapeRef.current) {
-      shapeRef.current.clearCache();
+      const node = shapeRef.current;
+      const layerNode = node.getLayer();
+      if (!layerNode) return;
+
+      // We need an animation loop to redraw the layer every frame so the video updates.
+      // Without this, the video plays in memory but the canvas stays static.
+      const anim = new Konva.Animation(() => {
+        // No custom logic needed here, just the existence of the anim on the layer triggers redraws.
+      }, layerNode);
+
+      anim.start();
+      return () => {
+        anim.stop();
+      };
     }
   }, [videoElement]);
 
