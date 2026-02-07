@@ -18,53 +18,53 @@ export const getEffectConfig = (effectId: string) => {
         case 'bw':
             return {
                 contrast: 0,
-                saturation: -1,
+                saturation: -1, // Unused due to Grayscale filter
                 brightness: 0
             };
         case 'kodachrome':
             return {
                 contrast: 20,
-                saturation: 0.3,
+                saturation: 0.6, // Increased
                 brightness: 0,
-                red: 20,
+                red: 50,      // Increased
                 green: 0,
-                blue: -10
+                blue: -30     // Increased
             };
         case 'astia':
             return {
-                contrast: 5,
-                saturation: 0.1,
+                contrast: 10,
+                saturation: 0.2,
                 brightness: 0.05,
-                red: 5,
+                red: 20,
                 green: 0,
-                blue: 5
+                blue: 20
             };
         case 'polaroid':
             return {
                 contrast: -10,
                 saturation: -0.2,
                 brightness: 0.1,
-                red: 10,
-                green: 10,
+                red: 40,
+                green: 40,
                 blue: 0
             };
         case 'technicolor':
             return {
-                contrast: 30,
-                saturation: 0.5,
+                contrast: 40,
+                saturation: 0.8,
                 brightness: -0.05,
-                red: 30,
-                green: -10,
-                blue: -10
+                red: 60,
+                green: -20,
+                blue: -20
             };
         case 'vintage':
             return {
                 contrast: -20,
-                saturation: -0.4,
+                saturation: -0.5,
                 brightness: 0,
-                red: 30,
-                green: 20,
-                blue: -10
+                red: 60,
+                green: 40,
+                blue: -20
             };
         case 'noir':
             return {
@@ -74,30 +74,30 @@ export const getEffectConfig = (effectId: string) => {
             };
         case 'dramatic':
             return {
-                contrast: 40,
-                saturation: -0.2,
-                brightness: -0.05,
-                red: -10,
-                green: -10,
-                blue: 20
-            };
-        case 'cyberpunk':
-            return {
-                contrast: 20,
-                saturation: 0.4,
-                brightness: 0,
-                red: -10,
+                contrast: 50,
+                saturation: -0.4,
+                brightness: -0.1,
+                red: -20,
                 green: -20,
                 blue: 40
             };
+        case 'cyberpunk':
+            return {
+                contrast: 30,
+                saturation: 0.8,
+                brightness: 0,
+                red: -20,
+                green: -40,
+                blue: 80
+            };
         case 'cinematic':
             return {
-                contrast: 15,
-                saturation: -0.1,
+                contrast: 20,
+                saturation: -0.2,
                 brightness: -0.05,
                 red: 0,
                 green: 0,
-                blue: 10
+                blue: 20
             };
         default:
             return null;
