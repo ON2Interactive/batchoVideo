@@ -2,9 +2,9 @@
 import { useState, useEffect } from 'react';
 
 export const useVideo = (
-  src: string, 
-  playing: boolean = true, 
-  loop: boolean = true, 
+  src: string,
+  playing: boolean = true,
+  loop: boolean = true,
   volume: number = 1,
   currentTime?: number
 ) => {
@@ -12,13 +12,13 @@ export const useVideo = (
 
   useEffect(() => {
     const video = document.createElement('video');
+    video.crossOrigin = 'anonymous'; // Set crossOrigin BEFORE src
     video.src = src;
-    video.crossOrigin = 'anonymous';
     video.loop = loop;
     video.muted = volume === 0;
     video.volume = volume;
     video.playsInline = true;
-    
+
     // Auto-play attempt
     if (playing) {
       video.play().catch(e => console.warn("Autoplay blocked or failed", e));
@@ -39,9 +39,9 @@ export const useVideo = (
       videoElement.loop = loop;
       videoElement.volume = volume;
       videoElement.muted = volume === 0;
-      
+
       if (playing) {
-        videoElement.play().catch(() => {});
+        videoElement.play().catch(() => { });
       } else {
         videoElement.pause();
       }

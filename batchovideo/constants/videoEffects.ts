@@ -24,80 +24,80 @@ export const getEffectConfig = (effectId: string) => {
         case 'kodachrome':
             return {
                 contrast: 20,
-                saturation: 0.6, // Increased
+                saturation: 0.4,
                 brightness: 0,
-                red: 50,      // Increased
+                red: 30,
                 green: 0,
-                blue: -30     // Increased
+                blue: -20
             };
         case 'astia':
             return {
                 contrast: 10,
                 saturation: 0.2,
                 brightness: 0.05,
-                red: 20,
+                red: 10,
                 green: 0,
-                blue: 20
+                blue: 10
             };
         case 'polaroid':
             return {
                 contrast: -10,
                 saturation: -0.2,
                 brightness: 0.1,
-                red: 40,
-                green: 40,
+                red: 20,
+                green: 20,
                 blue: 0
             };
         case 'technicolor':
             return {
-                contrast: 40,
-                saturation: 0.8,
+                contrast: 30,
+                saturation: 0.6,
                 brightness: -0.05,
-                red: 60,
-                green: -20,
-                blue: -20
+                red: 40,
+                green: -10,
+                blue: -10
             };
         case 'vintage':
             return {
                 contrast: -20,
-                saturation: -0.5,
+                saturation: -0.4,
                 brightness: 0,
-                red: 60,
-                green: 40,
-                blue: -20
+                red: 40,
+                green: 30,
+                blue: -10
             };
         case 'noir':
             return {
-                contrast: 50,
+                contrast: 40,
                 saturation: -1,
                 brightness: -0.1
             };
         case 'dramatic':
             return {
-                contrast: 50,
-                saturation: -0.4,
+                contrast: 40,
+                saturation: -0.3,
                 brightness: -0.1,
-                red: -20,
-                green: -20,
-                blue: 40
+                red: -10,
+                green: -10,
+                blue: 30
             };
         case 'cyberpunk':
             return {
-                contrast: 30,
-                saturation: 0.8,
+                contrast: 20,
+                saturation: 0.6,
                 brightness: 0,
-                red: -20,
-                green: -40,
-                blue: 80
+                red: -10,
+                green: -30,
+                blue: 60
             };
         case 'cinematic':
             return {
-                contrast: 20,
-                saturation: -0.2,
+                contrast: 15,
+                saturation: -0.1,
                 brightness: -0.05,
                 red: 0,
                 green: 0,
-                blue: 20
+                blue: 15
             };
         default:
             return null;
