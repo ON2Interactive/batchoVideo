@@ -13,6 +13,21 @@ export const useRecaptcha = () => {
     const [isReady, setIsReady] = useState(false);
 
     useEffect(() => {
+        const loadScript = () => {
+            // Check if script already exists
+            if (document.querySelector(`script[src*="recaptcha/enterprise.js"]`)) {
+                return;
+            }
+
+            const script = document.createElement('script');
+            script.src = `https://www.google.com/recaptcha/enterprise.js?render=${SITE_KEY}`;
+            script.async = true;
+            script.defer = true;
+            document.head.appendChild(script);
+        };
+
+        loadScript();
+
         const checkGrecaptcha = () => {
             if (window.grecaptcha && window.grecaptcha.enterprise) {
                 setIsReady(true);
