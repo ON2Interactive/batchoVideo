@@ -161,6 +161,7 @@ const App: React.FC<AppProps> = ({ initialProject, onBackToDashboard }) => {
   const handleSaveProject = useCallback(async () => {
     if (!userId) {
       console.warn("Cannot save: No authenticated user");
+      alert("Cannot save: You are not logged in. Please log in to save your work.");
       return;
     }
 
@@ -185,7 +186,8 @@ const App: React.FC<AppProps> = ({ initialProject, onBackToDashboard }) => {
       setLastSaved(Date.now());
     } catch (err) {
       console.error('Failed to save to Supabase:', err);
-      // Fallback or error notification?
+      // Fallback or error notification
+      alert(`Failed to save project: ${err.message || 'Unknown error'}`);
     } finally {
       setTimeout(() => setIsSaving(false), 800);
     }
