@@ -37,6 +37,8 @@ const AppRouter: React.FC = () => {
             setView('landing');
         } else if (path === '/dashboard') {
             setView('dashboard');
+        } else if (path.startsWith('/editor')) {
+            setView('editor');
         } else if (path === '/signin') {
             setView('login');
         } else if (path === '/signup') {
@@ -65,6 +67,8 @@ const AppRouter: React.FC = () => {
                 setView('landing');
             } else if (path === '/dashboard') {
                 setView('dashboard');
+            } else if (path.startsWith('/editor')) {
+                setView('editor');
             } else {
                 // Default for unknown authenticated routes? 
                 // Maybe check if it matches other public routes
