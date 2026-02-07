@@ -13,11 +13,18 @@ export const useVideo = (
   useEffect(() => {
     const video = document.createElement('video');
     video.crossOrigin = 'anonymous'; // Set crossOrigin BEFORE src
-    // Append a cache-busting parameter to ensure we get a fresh response with correct CORS headers
-    // This fixes issues where the browser uses a cached opaque response
-    const cacheBuster = src.includes('?') ? `&t=${Date.now()}` : `?t=${Date.now()}`;
-    video.src = `${src}${cacheBuster}`;
-    video.loop = loop;
+
+    // Check if src is a blob URL (local upload) or data URL
+    const isBlobOrData = src.startsWith('blob:') || src.startsWith('data:');
+
+    // Append a cache-busting parameter ONLY for external URLs to ensure we get a fresh response with correct CORS headers
+    // Doing this to a blob URL breaks it.
+    if (isBlobOrData) {
+      video.src = src;
+    } else {
+      const cacheBuster = src.includes('?') ? `&t=${Date.now()}` : `?t=${Date.now()}`;
+      video.src = `${src}${cacheBuster}`;
+    }
     video.muted = volume === 0;
     video.volume = volume;
     video.playsInline = true;
