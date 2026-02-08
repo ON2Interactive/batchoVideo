@@ -67,17 +67,17 @@ const Navigation: React.FC<NavigationProps> = ({ onGetStarted }) => {
                 {/* Desktop Menu Items - Hidden on mobile */}
                 <div className="hidden md:flex items-center gap-8">
                     <button
-                        onClick={() => handleNavigation('#pricing')}
+                        onClick={() => handleNavigation('/pricing')}
                         className="text-white hover:text-blue-400 transition-colors text-[0.95rem]"
                     >
                         Pricing
                     </button>
 
                     <button
-                        onClick={() => handleNavigation('/signin')}
+                        onClick={() => handleNavigation('/signup')}
                         className="text-white hover:text-blue-400 transition-colors text-[0.95rem]"
                     >
-                        Sign In
+                        Create Now
                     </button>
 
                     {/* Removed blue button styling, kept text link for desktop consistency or removed as per request for consistency? 
@@ -96,7 +96,7 @@ const Navigation: React.FC<NavigationProps> = ({ onGetStarted }) => {
             {isMenuOpen && (
                 <div className="md:hidden absolute top-full left-0 right-0 bg-black/95 backdrop-blur-xl border-b border-white/5 py-4 px-8 flex flex-col gap-4">
                     <button
-                        onClick={() => handleNavigation('#pricing')}
+                        onClick={() => handleNavigation('/pricing')}
                         className="text-white text-left py-2 hover:text-blue-400 transition-colors"
                     >
                         Pricing

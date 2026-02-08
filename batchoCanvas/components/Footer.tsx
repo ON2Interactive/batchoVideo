@@ -19,7 +19,7 @@ const Footer: React.FC = () => {
 
     const handleNavigation = (path: string) => {
         navigate(path);
-        window.scrollTo({ top: 0, behavior: 'smooth' });
+        window.scrollTo(0, 0); // Instant jump for page changes
     };
 
     const footerSections: FooterSection[] = [
@@ -27,7 +27,7 @@ const Footer: React.FC = () => {
             title: 'Product',
             links: [
                 { label: 'Features', path: '/#features' },
-                { label: 'Pricing', path: '/#pricing' },
+                { label: 'Pricing', path: '/pricing' },
                 { label: 'Sign In', path: '/signin' },
                 { label: 'Get Started', path: '/signup' },
             ]
@@ -38,7 +38,6 @@ const Footer: React.FC = () => {
                 { label: 'Use Cases', path: '/use-cases' },
                 { label: 'FAQs', path: '/faq' },
                 { label: 'Help', path: '/help' },
-                { label: 'Tutorials', path: '/tutorials' },
             ]
         },
         {
@@ -46,7 +45,7 @@ const Footer: React.FC = () => {
             links: [
                 { label: 'Terms of Use', path: '/terms' },
                 { label: 'Privacy Policy', path: '/privacy' },
-                { label: 'Cookie Policy', path: '/cookies' },
+                { label: 'Cookie Policy', path: '/cookie' },
                 { label: 'DMCA Notice', path: '/dmca' },
             ]
         },

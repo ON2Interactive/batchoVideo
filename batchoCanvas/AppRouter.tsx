@@ -13,8 +13,17 @@ import { STRIPE_CONFIG } from './stripeConfig';
 import { useLocation } from 'react-router-dom';
 import ContactPage from './components/ContactPage';
 import AboutPage from './components/AboutPage';
+import UseCasesPage from './components/UseCasesPage';
+import PricingPage from './components/PricingPage';
+import FAQPage from './components/FAQPage';
+import HelpPage from './components/HelpPage';
 
-type View = 'landing' | 'login' | 'signup' | 'dashboard' | 'editor' | 'admin' | 'adminLogin' | 'contact' | 'about';
+import TermsPage from './components/TermsPage';
+import PrivacyPage from './components/PrivacyPage';
+import CookiePage from './components/CookiePage';
+import DMCAPage from './components/DMCAPage';
+
+type View = 'landing' | 'login' | 'signup' | 'dashboard' | 'editor' | 'admin' | 'adminLogin' | 'contact' | 'about' | 'useCases' | 'pricing' | 'faq' | 'help' | 'terms' | 'privacy' | 'cookie' | 'dmca';
 
 const AppRouter: React.FC = () => {
     const [view, setView] = useState<View>('landing');
@@ -40,8 +49,28 @@ const AppRouter: React.FC = () => {
     useEffect(() => {
         // Sync view with URL path
         const path = location.pathname;
+        console.log('AppRouter: path changed to', path); // DEBUG
         if (path === '/contact') {
             setView('contact');
+        } else if (path === '/about') {
+            setView('about');
+        } else if (path === '/use-cases') {
+            console.log('AppRouter: Setting view to useCases'); // DEBUG
+            setView('useCases');
+        } else if (path === '/pricing') {
+            setView('pricing');
+        } else if (path === '/faq') {
+            setView('faq');
+        } else if (path === '/help') {
+            setView('help');
+        } else if (path === '/terms') {
+            setView('terms');
+        } else if (path === '/privacy') {
+            setView('privacy');
+        } else if (path === '/cookie') {
+            setView('cookie');
+        } else if (path === '/dmca') {
+            setView('dmca');
         } else if (path === '/') {
             setView('landing');
         } else if (path === '/dashboard') {
@@ -54,8 +83,6 @@ const AppRouter: React.FC = () => {
             setView('signup');
         } else if (path === '/admin') {
             setView('adminLogin');
-        } else if (path === '/about') {
-            setView('about');
         }
     }, [location.pathname]);
 
@@ -72,6 +99,22 @@ const AppRouter: React.FC = () => {
                 setView('contact');
             } else if (path === '/about') {
                 setView('about');
+            } else if (path === '/use-cases') {
+                setView('useCases');
+            } else if (path === '/pricing') {
+                setView('pricing');
+            } else if (path === '/faq') {
+                setView('faq');
+            } else if (path === '/help') {
+                setView('help');
+            } else if (path === '/terms') {
+                setView('terms');
+            } else if (path === '/privacy') {
+                setView('privacy');
+            } else if (path === '/cookie') {
+                setView('cookie');
+            } else if (path === '/dmca') {
+                setView('dmca');
             } else if (path === '/') {
                 setView('landing');
             } else if (path === '/dashboard') {
@@ -94,6 +137,22 @@ const AppRouter: React.FC = () => {
                 setView('contact');
             } else if (path === '/about') {
                 setView('about');
+            } else if (path === '/use-cases') {
+                setView('useCases');
+            } else if (path === '/pricing') {
+                setView('pricing');
+            } else if (path === '/faq') {
+                setView('faq');
+            } else if (path === '/help') {
+                setView('help');
+            } else if (path === '/terms') {
+                setView('terms');
+            } else if (path === '/privacy') {
+                setView('privacy');
+            } else if (path === '/cookie') {
+                setView('cookie');
+            } else if (path === '/dmca') {
+                setView('dmca');
             } else if (path === '/signin') {
                 setView('login');
             } else if (path === '/signup') {
@@ -203,6 +262,70 @@ const AppRouter: React.FC = () => {
 
     if (view === 'about') {
         return <AboutPage />;
+    }
+
+    if (view === 'useCases') {
+        return (
+            <UseCasesPage
+                onStartEditing={() => setView('signup')}
+            />
+        );
+    }
+
+    if (view === 'pricing') {
+        return (
+            <PricingPage
+                onBuyCredits={handleBuyCredits}
+            />
+        );
+    }
+
+    if (view === 'faq') {
+        return (
+            <FAQPage
+                onStartEditing={() => setView('signup')}
+            />
+        );
+    }
+
+    if (view === 'help') {
+        return (
+            <HelpPage
+                onStartEditing={() => setView('signup')}
+            />
+        );
+    }
+
+    if (view === 'terms') {
+        return (
+            <TermsPage
+                onStartEditing={() => setView('signup')}
+            />
+        );
+    }
+
+    if (view === 'privacy') {
+        return (
+            <PrivacyPage
+                onStartEditing={() => setView('signup')}
+            />
+        );
+    }
+
+    if (view === 'cookie') {
+        return (
+            <CookiePage
+                onStartEditing={() => setView('signup')}
+            />
+        );
+    }
+
+    if (view === 'dmca') {
+        return (
+            <DMCAPage
+                onStartEditing={() => setView('signup')}
+            />
+        );
     }
 
     if (view === 'landing') {
