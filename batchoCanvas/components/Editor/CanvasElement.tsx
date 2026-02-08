@@ -59,9 +59,16 @@ const CanvasElement: React.FC<Props> = ({
       const img = new window.Image();
       const originalSrc = (layer as ImageLayer).src;
 
-      img.crossOrigin = 'Anonymous';
+      const isBlob = originalSrc.startsWith('blob:');
+
+      // CRITICAL FIX: Chrome fails if crossOrigin is set on a blob: URL
+      if (!isBlob) {
+        img.crossOrigin = 'Anonymous';
+      }
+
       const separator = originalSrc.includes('?') ? '&' : '?';
-      img.src = `${originalSrc}${separator}t=${Date.now()}`; // Bypass cache
+      // For blobs, we don't need cache busting (it's a unique local URL)
+      img.src = isBlob ? originalSrc : `${originalSrc}${separator}t=${Date.now()}`;
 
       img.onload = () => setImageElement(img);
 
