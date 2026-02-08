@@ -156,8 +156,6 @@ const App: React.FC<AppProps> = ({ initialProject, onBackToDashboard }) => {
   // ... Tool & UI State ...
   const [activeTool, setActiveTool] = useState<string>('select');
   const [isExporting, setIsExporting] = useState(false);
-  const [downloadReadyUrl, setDownloadReadyUrl] = useState<string | null>(null);
-  const [downloadReadyFilename, setDownloadReadyFilename] = useState<string | null>(null);
   const [isGenerating, setIsGenerating] = useState(false);
   const [statusText, setStatusText] = useState<string>('');
   const [exportProgress, setExportProgress] = useState(0);
@@ -708,18 +706,13 @@ const App: React.FC<AppProps> = ({ initialProject, onBackToDashboard }) => {
         const pixelRatio = config.targetWidth / activePage.width;
         const uri = stage.toDataURL({ pixelRatio });
         const link = document.createElement('a');
-        // MANUAL DOWNLOAD TRIGGER
-        // link.download = `${baseFilename}.png`;
-        // link.href = uri;
-        // document.body.appendChild(link);
-        // link.click();
-        // document.body.removeChild(link);
-
-        setDownloadReadyUrl(uri);
-        setDownloadReadyFilename(`${baseFilename}.png`);
-        setStatusText("Your Image is Ready!");
-        // setIsExporting(false); // Keep exporting true to show overlay
-        console.log('✅ PNG export ready for manual download');
+        link.download = `${baseFilename}.png`;
+        link.href = uri;
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        setIsExporting(false);
+        console.log('✅ PNG export complete');
         return;
       }
 
@@ -735,16 +728,10 @@ const App: React.FC<AppProps> = ({ initialProject, onBackToDashboard }) => {
         });
 
         pdf.addImage(uri, 'PNG', 0, 0, activePage.width, activePage.height);
-        pdf.save(`${baseFilename}.pdf`); // Auto-save might work for PDF, but consistency is better
-        // MANUAL DOWNLOAD TRIGGER
-        const pdfBlob = pdf.output('blob');
-        const pdfUrl = URL.createObjectURL(pdfBlob);
+        pdf.save(`${baseFilename}.pdf`);
 
-        setDownloadReadyUrl(pdfUrl);
-        setDownloadReadyFilename(`${baseFilename}.pdf`);
-        setStatusText("Your PDF is Ready!");
-        // setIsExporting(false); // Keep exporting true to show overlay
-        console.log('✅ PDF export ready for manual download');
+        setIsExporting(false);
+        console.log('✅ PDF export complete');
         return;
       }
 
@@ -791,14 +778,15 @@ const App: React.FC<AppProps> = ({ initialProject, onBackToDashboard }) => {
         const blob = new Blob(chunks, { type: mimeType });
         console.log('📦 Final blob size:', blob.size, 'bytes');
         const url = URL.createObjectURL(blob);
-
-        // MANUAL DOWNLOAD TRIGGER
-        setDownloadReadyUrl(url);
-        setDownloadReadyFilename(`${baseFilename}.${mimeType.includes('mp4') ? 'mp4' : 'webm'}`);
-        setStatusText("Your Video is Ready!");
-        // link.click() removed
-        // setIsExporting(false); // Keep overlay open
-        console.log('✅ Export ready for manual download!');
+        const link = document.createElement('a');
+        link.download = `${baseFilename}.${mimeType.includes('mp4') ? 'mp4' : 'webm'}`;
+        link.href = url;
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        window.URL.revokeObjectURL(url);
+        setIsExporting(false);
+        console.log('✅ Export complete!');
       };
 
       setStatusText("Recording Scene...");
@@ -989,64 +977,24 @@ const App: React.FC<AppProps> = ({ initialProject, onBackToDashboard }) => {
       )}
       {(isExporting || isGenerating) && (
         <div className="fixed inset-0 bg-black/80 z-[300] flex flex-col items-center justify-center gap-6 backdrop-blur-md animate-in fade-in duration-300">
-          {downloadReadyUrl ? (
-            <div className="flex flex-col items-center gap-6 p-8 bg-zinc-900 border border-emerald-500/50 rounded-3xl shadow-2xl max-w-sm text-center animate-in zoom-in-95">
-              <div className="w-16 h-16 bg-emerald-500/10 rounded-full flex items-center justify-center text-emerald-500 mb-2">
-                <CheckCircle2 size={32} />
+          {isGenerating ? (
+            <div className="relative">
+              <div className="w-24 h-24 border-4 border-blue-500/20 border-t-blue-500 rounded-full animate-spin shadow-2xl shadow-blue-500/20" />
+              <div className="absolute inset-0 flex items-center justify-center text-blue-400">
+                <Wand2 size={32} className="animate-pulse" />
               </div>
-              <div className="space-y-2">
-                <h3 className="text-2xl font-bold text-white">Export Complete!</h3>
-                <p className="text-zinc-400 text-sm">Your file is ready to save.</p>
-              </div>
-
-              <a
-                href={downloadReadyUrl}
-                download={downloadReadyFilename || "export"}
-                className="w-full py-4 bg-emerald-600 hover:bg-emerald-500 text-white font-bold rounded-xl shadow-lg transition-transform hover:scale-[1.02] active:scale-[0.98] flex items-center justify-center gap-2"
-                onClick={(e) => {
-                  e.stopPropagation();
-                }}
-              >
-                <Download size={20} />
-                Download {downloadReadyFilename ? `"${downloadReadyFilename.length > 20 ? downloadReadyFilename.substring(0, 20) + '...' : downloadReadyFilename}"` : 'File'}
-              </a>
-
-              <button
-                onClick={() => {
-                  setIsExporting(false);
-                  setDownloadReadyUrl(null);
-                  setDownloadReadyFilename(null);
-                  setStatusText("");
-                  // Cleanup URL to prevent memory leaks
-                  if (downloadReadyUrl) URL.revokeObjectURL(downloadReadyUrl);
-                }}
-                className="text-zinc-500 hover:text-white text-sm font-medium transition-colors"
-              >
-                Close
-              </button>
             </div>
           ) : (
-            <>
-              {isGenerating ? (
-                <div className="relative">
-                  <div className="w-24 h-24 border-4 border-blue-500/20 border-t-blue-500 rounded-full animate-spin shadow-2xl shadow-blue-500/20" />
-                  <div className="absolute inset-0 flex items-center justify-center text-blue-400">
-                    <Wand2 size={32} className="animate-pulse" />
-                  </div>
-                </div>
-              ) : (
-                <div className="w-64 h-2 bg-zinc-800 rounded-full overflow-hidden">
-                  <div className="h-full bg-blue-600 transition-all duration-300" style={{ width: `${exportProgress}%` }} />
-                </div>
-              )}
-              <div className="flex flex-col items-center gap-2">
-                <p className="text-sm font-black text-white uppercase tracking-[0.2em] animate-pulse">
-                  {statusText}
-                </p>
-                {isExporting && <span className="text-[10px] text-zinc-500 font-mono">{Math.round(exportProgress)}% COMPLETE</span>}
-              </div>
-            </>
+            <div className="w-64 h-2 bg-zinc-800 rounded-full overflow-hidden">
+              <div className="h-full bg-blue-600 transition-all duration-300" style={{ width: `${exportProgress}%` }} />
+            </div>
           )}
+          <div className="flex flex-col items-center gap-2">
+            <p className="text-sm font-black text-white uppercase tracking-[0.2em] animate-pulse">
+              {statusText}
+            </p>
+            {isExporting && <span className="text-[10px] text-zinc-500 font-mono">{Math.round(exportProgress)}% COMPLETE</span>}
+          </div>
         </div>
       )}
 
