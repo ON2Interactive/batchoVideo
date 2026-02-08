@@ -758,6 +758,10 @@ const App: React.FC<AppProps> = ({ initialProject, onBackToDashboard }) => {
       const mimeType = MediaRecorder.isTypeSupported('video/mp4') ? 'video/mp4' : 'video/webm';
       console.log('📹 Using MIME type:', mimeType);
 
+      if (mimeType === 'video/webm' && navigator.userAgent.indexOf('Chrome') > -1) {
+        console.warn("⚠️ Chrome detected + WebM. This usually works, but if it fails, check if 'Use hardware acceleration' is on.");
+      }
+
       const recorder = new MediaRecorder(stream, { mimeType, videoBitsPerSecond: config.targetWidth > 2000 ? 25000000 : 8000000 });
       const chunks: Blob[] = [];
 
@@ -809,8 +813,19 @@ const App: React.FC<AppProps> = ({ initialProject, onBackToDashboard }) => {
       // Chrome needs active canvas updates to capture frames
       const forceRedraw = () => {
         if (!isRecording) return;
-        // Force Konva to redraw the canvas
-        stage.batchDraw();
+
+        // CRITICAL FOR CHROME:
+        // batchDraw() is optimized and might skip if no changes are detected.
+        // We must force a synchronous draw on layers to keep the stream active.
+        const layers = stage.children;
+        if (layers) {
+          layers.forEach((layer: any) => {
+            layer.draw(); // Force synchronous draw
+          });
+        } else {
+          stage.draw(); // Fallback
+        }
+
         requestAnimationFrame(forceRedraw);
       };
 
