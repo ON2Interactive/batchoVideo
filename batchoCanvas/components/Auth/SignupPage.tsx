@@ -254,7 +254,7 @@ export const SignupPage: React.FC<SignupPageProps> = ({ onSuccess, onSwitchToLog
 
                 <div style={{ marginTop: '20px', padding: '15px', backgroundColor: '#2a2a2a', borderRadius: '8px' }}>
                     <p style={{ color: '#4CAF50', fontSize: '13px', margin: 0, textAlign: 'center' }}>
-                        🎉 Get 3 free credits when you sign up!
+                        🎉 Get 50 free credits when you sign up!
                     </p>
                 </div>
             </div>
