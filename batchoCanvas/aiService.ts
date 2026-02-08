@@ -42,7 +42,7 @@ export const aiService = {
     useSimulation: boolean = false
   ): Promise<string> {
     console.log(`AI Service: Starting generation (Mode: ${useSimulation ? 'Simulation' : 'Real AI'})...`);
-    
+
     if (useSimulation) {
       return this.simulateGeneration(onProgress);
     }
@@ -52,10 +52,10 @@ export const aiService = {
       console.log("AI Service: Key selection failed/cancelled, triggering simulation.");
       return this.simulateGeneration(onProgress);
     }
-    
+
     // Always create a new instance to ensure the key from the dialog is picked up
     const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
-    
+
     try {
       onProgress("Contacting Gemini Deepmind servers...");
       const cleanBase64 = base64Image.split(',')[1] || base64Image;
@@ -119,7 +119,7 @@ export const aiService = {
       "Analyzing reference pixels...",
       "Interpolating motion paths...",
       "Rendering simulated frames...",
-      "Encoding MP4 payload..."
+      "Encoding Video payload..."
     ];
 
     for (const status of simulationStatuses) {

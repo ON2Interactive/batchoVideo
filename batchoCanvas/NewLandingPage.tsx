@@ -348,7 +348,7 @@ const NewLandingPage: React.FC<NewLandingPageProps> = ({ onStartEditing, onBuyCr
                         },
                         {
                             question: "Can I export in different aspect ratios?",
-                            answer: "Yes. You can choose from common aspect ratios like 16:9, 9:16, and 1:1—or set custom canvas sizes—and export MP4 videos optimized for social, web, or presentations."
+                            answer: "Yes. You can choose from common aspect ratios like 16:9, 9:16, and 1:1—or set custom canvas sizes—and export videos optimized for social, web, or presentations."
                         },
                         {
                             question: "How are scenes used?",

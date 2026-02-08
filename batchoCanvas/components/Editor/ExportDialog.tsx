@@ -106,7 +106,7 @@ const ExportDialog: React.FC<Props> = ({
                   }`}
               >
                 <VideoIcon size={24} />
-                <span className="text-xs font-bold">Video (MP4)</span>
+                <span className="text-xs font-bold">Video</span>
               </button>
             </div>
           </div>

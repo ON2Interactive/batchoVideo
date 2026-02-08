@@ -16,7 +16,7 @@ const FAQPage: React.FC<FAQPageProps> = ({ onStartEditing }) => {
     const faqs = [
         {
             question: "What is BatchoCanvas?",
-            answer: "BatchoCanvas is a canvas-based video editor that lets you design videos visually using layers and scenes. You can overlay text and shapes on video, choose your canvas size, and export polished MP4 videos without working on a traditional timeline."
+            answer: "BatchoCanvas is a canvas-based video editor that lets you design videos visually using layers and scenes. You can overlay text and shapes on video, choose your canvas size, and export polished videos without working on a traditional timeline."
         },
         {
             question: "Do I need video editing experience to use it?",
@@ -28,7 +28,7 @@ const FAQPage: React.FC<FAQPageProps> = ({ onStartEditing }) => {
         },
         {
             question: "Can I export in different aspect ratios?",
-            answer: "Yes. You can choose from common aspect ratios like 16:9, 9:16, and 1:1—or set custom canvas sizes—and export MP4 videos optimized for social, web, or presentations."
+            answer: "Yes. You can choose from common aspect ratios like 16:9, 9:16, and 1:1—or set custom canvas sizes—and export videos optimized for social, web, or presentations."
         },
         {
             question: "How are scenes used?",

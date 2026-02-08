@@ -67,7 +67,7 @@ serve(async (req) => {
             <div style="font-family: Arial, sans-serif; color: #333; max-width: 600px; margin: 0 auto;">
                 <h1 style="color: #000;">Welcome to BatchoCanvas</h1>
                 <p>You’re all set.</p>
-                <p>Design videos directly on a canvas—layer clips, add text and shapes, create scenes, and export clean MP4s in the exact format you need.</p>
+                <p>Design videos directly on a canvas—layer clips, add text and shapes, create scenes, and export clean videos in the exact format you need.</p>
                 <p>Start by adding your first video or image to the canvas and build from there.</p>
                 <br/>
                 <a href="https://batchocanvas.com/signin" style="background-color: #000; color: #fff; padding: 12px 24px; text-decoration: none; border-radius: 4px; font-weight: bold;">Start Creating →</a>
