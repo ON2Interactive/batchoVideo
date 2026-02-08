@@ -15,6 +15,10 @@ const NewLandingPage: React.FC<NewLandingPageProps> = ({ onStartEditing, onBuyCr
     const [soonSubmitted, setSoonSubmitted] = useState(false);
     const { executeRecaptcha } = useRecaptcha();
 
+    React.useEffect(() => {
+        document.title = "BatchoCanvas | Canvas for Structured Design";
+    }, []);
+
     const handleSoonSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
         const token = await executeRecaptcha('UPCOMING_FEATURE');
@@ -64,7 +68,7 @@ const NewLandingPage: React.FC<NewLandingPageProps> = ({ onStartEditing, onBuyCr
                         </div>
 
                         <p className="text-base text-zinc-400 max-w-lg leading-relaxed">
-                            Design with layers, scenes, grids, and grouping—then export exactly what you need, from MP4s to PDFs.
+                            Design with layers, scenes, grids, and grouping—then export exactly what you need, from videos to PDFs.
                         </p>
 
                         <div className="space-y-8">
@@ -105,7 +109,7 @@ const NewLandingPage: React.FC<NewLandingPageProps> = ({ onStartEditing, onBuyCr
                 <div className="text-center mb-16">
                     <h2 className="text-[18px] md:text-4xl lg:text-5xl font-bold mb-4">Design on Canvas</h2>
                     <p className="text-zinc-400 text-lg">
-                        Layers · Scenes · Aspect Ratios · MP4 Export
+                        Layers · Scenes · Aspect Ratios · Video Export
                     </p>
                 </div>
 
@@ -138,7 +142,7 @@ const NewLandingPage: React.FC<NewLandingPageProps> = ({ onStartEditing, onBuyCr
                         <div className="w-12 h-12 bg-violet-500/10 rounded-lg flex items-center justify-center group-hover:bg-violet-500/20 transition-colors">
                             <Download size={24} className="text-violet-400" />
                         </div>
-                        <h3 className="text-xl font-semibold">Export to MP4</h3>
+                        <h3 className="text-xl font-semibold">Export to Video</h3>
                         <p className="text-zinc-400 text-sm leading-relaxed">
                             High-quality video export optimized for web and social media.
                         </p>
@@ -242,7 +246,7 @@ const NewLandingPage: React.FC<NewLandingPageProps> = ({ onStartEditing, onBuyCr
                     </p>
                     <p>
                         <span className="text-white font-semibold">batchoCanvas</span> is the first design canvas built to handle video as a native design element.
-                        Place video directly on a canvas, layer it with text, shapes, grids, and layouts—then export finished MP4s or PDFs without switching tools.
+                        Place video directly on a canvas, layer it with text, shapes, grids, and layouts—then export finished videos or PDFs without switching tools.
                     </p>
                     <p className="text-white font-bold text-xl md:text-2xl pt-8 tracking-tight">
                         No timelines. No workarounds. No compromises.
@@ -261,7 +265,7 @@ const NewLandingPage: React.FC<NewLandingPageProps> = ({ onStartEditing, onBuyCr
                                 BatchoCanvas takes a different approach.
                             </p>
                             <p>
-                                Design directly on a canvas. Layer video, text, and shapes with precision. Build scenes like pages, choose your aspect ratio, and export clean MP4 videos—fast.
+                                Design directly on a canvas. Layer video, text, and shapes with precision. Build scenes like pages, choose your aspect ratio, and export clean videos—fast.
                             </p>
                             <p className="font-medium text-white">
                                 No clutter. No friction. Just intentional video design.
@@ -297,7 +301,7 @@ const NewLandingPage: React.FC<NewLandingPageProps> = ({ onStartEditing, onBuyCr
                             role: "Creative Director"
                         },
                         {
-                            quote: "I needed professional-looking videos without spending hours editing. BatchoCanvas lets me design once, reuse scenes, and export clean MP4s whenever I need them.",
+                            quote: "I needed professional-looking videos without spending hours editing. BatchoCanvas lets me design once, reuse scenes, and export clean videos whenever I need them.",
                             author: "Elena R.",
                             role: "Independent Creator"
                         },
@@ -336,7 +340,7 @@ const NewLandingPage: React.FC<NewLandingPageProps> = ({ onStartEditing, onBuyCr
                     {[
                         {
                             question: "What is BatchoCanvas?",
-                            answer: "BatchoCanvas is a canvas-based video editor that lets you design videos visually using layers and scenes. You can overlay text and shapes on video, choose your canvas size, and export polished MP4 videos without working on a traditional timeline."
+                            answer: "BatchoCanvas is a canvas-based video editor that lets you design videos visually using layers and scenes. You can overlay text and shapes on video, choose your canvas size, and export polished videos without working on a traditional timeline."
                         },
                         {
                             question: "Do I need video editing experience to use it?",
