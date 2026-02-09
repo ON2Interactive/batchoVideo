@@ -62,15 +62,24 @@ serve(async (req) => {
 
         // 2. Prepare Welcome Email (Only for signup, sent to the User)
         if (type === 'signup') {
-            const welcomeSubject = "Welcome to BatchoCanvas";
+            const welcomeSubject = "Welcome to batchoCanvas";
             const welcomeContent = `
             <div style="font-family: Arial, sans-serif; color: #333; max-width: 600px; margin: 0 auto;">
-                <h1 style="color: #000;">Welcome to BatchoCanvas</h1>
-                <p>You’re all set.</p>
-                <p>Design videos directly on a canvas—layer clips, add text and shapes, create scenes, and export clean videos in the exact format you need.</p>
-                <p>Start by adding your first video or image to the canvas and build from there.</p>
+                <h1 style="color: #000;">Welcome to batchoCanvas.</h1>
+                <p>You now have access to a new kind of design canvas—one built for structure, layout, and motion. Design with layers, scenes, grids, and grouping, then export exactly what you need, from MP4s to PDFs.</p>
+                <p>There’s no timeline to manage and no rigid workflow to learn. Everything starts on the canvas.</p>
+                <p><strong>A simple way to begin:</strong></p>
+                <ul>
+                    <li>Add content to the canvas</li>
+                    <li>Arrange and layer with precision</li>
+                    <li>Export when it’s ready</li>
+                </ul>
+                <p>batchoCanvas is designed to stay out of your way and give you control where it matters.</p>
+                <p>Start creating when you’re ready.</p>
                 <br/>
-                <a href="https://batchocanvas.com/signin" style="background-color: #000; color: #fff; padding: 12px 24px; text-decoration: none; border-radius: 4px; font-weight: bold;">Start Creating →</a>
+                <p>— The batchoCanvas Team</p>
+                <br/>
+                <a href="https://www.batchocanvas.com/" style="background-color: #000; color: #fff; padding: 12px 24px; text-decoration: none; border-radius: 4px; font-weight: bold;">Go to batchoCanvas →</a>
             </div>
         `;
 
@@ -82,7 +91,7 @@ serve(async (req) => {
                 },
                 body: JSON.stringify({
                     personalizations: [{ to: [{ email: to }], subject: welcomeSubject }],
-                    from: { email: 'hello@batchocanvas.com', name: 'BatchoCanvas Team' },
+                    from: { email: 'hello@batchocanvas.com', name: 'batchoCanvas Team' },
                     content: [{ type: 'text/html', value: welcomeContent }],
                 }),
             }));
