@@ -50,8 +50,14 @@ export const AdminDashboard: React.FC<{ onLogout: () => void }> = ({ onLogout })
 
     const handleDeleteUser = async (userId: string) => {
         if (confirm('Are you sure you want to delete this user? This action cannot be undone.')) {
-            await adminHelpers.deleteUser(userId);
-            loadData();
+            const { error } = await adminHelpers.deleteUser(userId);
+            if (error) {
+                console.error("Delete failed:", error);
+                alert(`Failed to delete user: ${error.message}`);
+            } else {
+                loadData();
+                alert("User deleted successfully.");
+            }
         }
     };
 
