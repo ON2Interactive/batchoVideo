@@ -62,14 +62,8 @@ export const SignupPage: React.FC<SignupPageProps> = ({ onSuccess, onSwitchToLog
 
         if (data.user) {
             try {
-                // Initialize User Profile (Credits)
-                const { error: initError } = await dbHelpers.initUserProfile(data.user.id);
-                if (initError) {
-                    console.error('Profile initialization failed:', initError);
-                    setError(`Account created, but profile setup failed: ${initError.message}. Please contact support.`);
-                    setLoading(false);
-                    return;
-                }
+                // Note: User Profile (Credits) is now handled by the handle_new_user database trigger.
+                // This prevents RLS issues with unconfirmed users.
 
                 // Send Admin Notification
                 await dbHelpers.sendEmail({
@@ -79,19 +73,17 @@ export const SignupPage: React.FC<SignupPageProps> = ({ onSuccess, onSwitchToLog
                     type: 'signup'
                 }).catch(err => {
                     console.error('Admin notification failed:', err);
-                    // We don't block the user if just the admin notification fails
                 });
 
+                // Show success state and prompt for verification
                 onSuccess();
-                // Note: The parent AppRouter handles navigation to /dashboard.
-                // We trust Supabase will show a verification warning if they try to use features unverified.
             } catch (err: any) {
-
                 console.error('Signup post-process error:', err);
                 setError('A problem occurred while setting up your account. Please try logging in.');
                 setLoading(false);
             }
         }
+
     };
 
     return (
