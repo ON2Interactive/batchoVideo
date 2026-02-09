@@ -68,7 +68,7 @@ export default async function handler(req, res) {
             const welcomeContent = `
             <div style="font-family: Arial, sans-serif; color: #333; max-width: 600px; margin: 0 auto;">
                 <h1 style="color: #000;">Welcome to batchoCanvas.</h1>
-                <p>You now have access to a new kind of design canvas—one built for structure, layout, and motion. Design with layers, scenes, grids, and grouping, then export exactly what you need, from MP4s to PDFs.</p>
+                <p>You now have access to a new kind of design canvas—one built for structure, layout, and motion. Design with layers, scenes, grids, and grouping, then export exactly what you need, from Videos to PDFs.</p>
                 <p>There’s no timeline to manage and no rigid workflow to learn. Everything starts on the canvas.</p>
                 <p><strong>A simple way to begin:</strong></p>
                 <ul>
@@ -81,7 +81,7 @@ export default async function handler(req, res) {
                 <br/>
                 <p>— The batchoCanvas Team</p>
                 <br/>
-                <a href="https://www.batchocanvas.com/" style="background-color: #000; color: #fff; padding: 12px 24px; text-decoration: none; border-radius: 4px; font-weight: bold;">Go to batchoCanvas →</a>
+                <a href="https://www.batchocanvas.com/editor" style="background-color: #000; color: #fff; padding: 12px 24px; text-decoration: none; border-radius: 4px; font-weight: bold;">Start Creating →</a>
             </div>
         `;
 
