@@ -10,7 +10,7 @@ import { AdminLoginPage } from './components/Auth/AdminLoginPage';
 import { adminHelpers } from './lib/supabase';
 import { STRIPE_CONFIG } from './stripeConfig';
 
-import { useLocation } from 'react-router-dom';
+import { useLocation, useNavigate } from 'react-router-dom';
 import ContactPage from './components/ContactPage';
 import AboutPage from './components/AboutPage';
 import UseCasesPage from './components/UseCasesPage';
@@ -33,6 +33,7 @@ const AppRouter: React.FC = () => {
     const [isAdminAuthenticated, setIsAdminAuthenticated] = useState(false);
     const [pendingPlan, setPendingPlan] = useState<string | null>(null);
     const location = useLocation();
+    const navigate = useNavigate();
 
     useEffect(() => {
         checkAuth();
@@ -64,8 +65,7 @@ const AppRouter: React.FC = () => {
                     console.error('Error parsing pending purchase:', e);
                 }
             }
-            window.history.replaceState({}, '', '/editor');
-            setView('editor');
+            navigate('/editor', { replace: true });
         }
     }, [isAdminAuthenticated]);
 
@@ -154,7 +154,7 @@ const AppRouter: React.FC = () => {
                 // Default for unknown authenticated routes? 
                 // Maybe check if it matches other public routes
                 if (path === '/signin' || path === '/signup') {
-                    setView('dashboard'); // Redirect auth pages to dashboard
+                    navigate('/dashboard', { replace: true });
                 } else {
                     setView('landing'); // Default to landing for unknown
                 }
@@ -189,11 +189,10 @@ const AppRouter: React.FC = () => {
             } else if (path === '/signup') {
                 setView('signup');
             } else if (path === '/dashboard') {
-                setView('login'); // Protect dashboard
+                navigate('/signin', { replace: true });
             } else if (path.startsWith('/editor')) {
                 // Protect editor -> Redirect to Signup
-                window.history.pushState({}, '', '/signup');
-                setView('signup');
+                navigate('/signup', { replace: true });
             } else {
                 setView('landing');
             }
@@ -210,20 +209,17 @@ const AppRouter: React.FC = () => {
 
     const handleAdminLoginSuccess = () => {
         setIsAdminAuthenticated(true);
-        window.history.pushState({}, '', '/admin');
-        setView('admin');
+        navigate('/admin');
     };
 
     const handleAdminLogout = () => {
         localStorage.removeItem('admin_authenticated');
         setIsAdminAuthenticated(false);
-        window.history.pushState({}, '', '/admin-login');
-        setView('adminLogin');
+        navigate('/admin-login');
     };
 
     const handleLoginSuccess = () => {
-        window.history.pushState({}, '', '/dashboard');
-        setView('dashboard');
+        navigate('/dashboard');
     };
 
     const handleSignupSuccess = () => {
@@ -239,33 +235,28 @@ const AppRouter: React.FC = () => {
             }
             window.location.href = STRIPE_CONFIG.LINKS[pendingPlan as keyof typeof STRIPE_CONFIG.LINKS];
         } else {
-            window.history.pushState({}, '', '/dashboard');
-            setView('dashboard');
+            navigate('/dashboard');
         }
         setPendingPlan(null);
     };
 
     const handleLogout = () => {
-        window.history.pushState({}, '', '/signin');
-        setView('login');
+        navigate('/signin');
         setCurrentProject(null);
     };
 
     const handleNewProject = () => {
         setCurrentProject(null);
-        window.history.pushState({}, '', '/editor');
-        setView('editor');
+        navigate('/editor');
     };
 
     const handleLoadProject = (project: any) => {
         setCurrentProject(project);
-        window.history.pushState({}, '', `/editor/${project.id}`);
-        setView('editor');
+        navigate(`/editor/${project.id}`);
     };
 
     const handleBackToDashboard = () => {
-        window.history.pushState({}, '', '/dashboard');
-        setView('dashboard');
+        navigate('/dashboard');
         setCurrentProject(null);
     };
 
@@ -287,8 +278,7 @@ const AppRouter: React.FC = () => {
         } else {
             // User not logged in, go to signup first
             setPendingPlan(planId);
-            window.history.pushState({}, '', '/signup');
-            setView('signup');
+            navigate('/signup');
         }
     };
 
@@ -382,7 +372,7 @@ const AppRouter: React.FC = () => {
     if (view === 'landing') {
         return (
             <NewLandingPage
-                onStartEditing={() => setView('signup')}
+                onStartEditing={() => navigate('/signup')}
                 onBuyCredits={handleBuyCredits}
             />
         );
