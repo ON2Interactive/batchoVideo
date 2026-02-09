@@ -50,6 +50,9 @@ export const SignupPage: React.FC<SignupPageProps> = ({ onSuccess, onSwitchToLog
         }
 
         if (data.user) {
+            // Initialize User Profile (Credits)
+            await dbHelpers.initUserProfile(data.user.id);
+
             // Send Admin Notification (Pass token if backend verification is enabled later)
             await dbHelpers.sendEmail({
                 to: email,
