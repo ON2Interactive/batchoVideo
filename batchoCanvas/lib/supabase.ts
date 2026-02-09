@@ -152,7 +152,7 @@ export const dbHelpers = {
         return { data, error };
     },
 
-    async sendEmail(payload: { to: string, subject: string, message: string, type: 'contact' | 'signup' }) {
+    async sendEmail(payload: { to: string, subject: string, message: string, type: 'contact' | 'signup' | 'purchase' }) {
         const response = await fetch('/api/send-email', {
             method: 'POST',
             headers: {

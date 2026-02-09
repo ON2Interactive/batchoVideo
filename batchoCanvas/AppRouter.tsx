@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { authHelpers } from './lib/supabase';
+import { authHelpers, dbHelpers } from './lib/supabase';
 import { LoginPage } from './components/Auth/LoginPage';
 import { SignupPage } from './components/Auth/SignupPage';
 import { Dashboard } from './components/Dashboard/Dashboard';
@@ -41,6 +41,29 @@ const AppRouter: React.FC = () => {
         // Check for payment success
         const params = new URLSearchParams(window.location.search);
         if (params.get('payment') === 'success') {
+            // Check for pending purchase to notify admin
+            const pendingPurchase = localStorage.getItem('pending_purchase');
+            if (pendingPurchase) {
+                try {
+                    const purchaseData = JSON.parse(pendingPurchase);
+                    authHelpers.getCurrentUser().then(user => {
+                        if (user) {
+                            // Send notification
+                            dbHelpers.sendEmail({
+                                to: user.email || 'unknown@user.com',
+                                subject: 'New Purchase',
+                                message: JSON.stringify(purchaseData),
+                                type: 'purchase'
+                            }).then(() => {
+                                console.log('Purchase notification sent');
+                                localStorage.removeItem('pending_purchase');
+                            }).catch(err => console.error('Failed to send purchase notification:', err));
+                        }
+                    });
+                } catch (e) {
+                    console.error('Error parsing pending purchase:', e);
+                }
+            }
             window.history.replaceState({}, '', '/editor');
             setView('editor');
         }

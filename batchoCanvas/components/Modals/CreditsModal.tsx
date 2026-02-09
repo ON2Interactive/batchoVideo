@@ -66,6 +66,12 @@ const CreditsModal: React.FC<Props> = ({ onClose, onPurchase }) => {
             // Real Mode
             const link = STRIPE_CONFIG.LINKS[pack.id as keyof typeof STRIPE_CONFIG.LINKS];
             if (link) {
+                // Save pending purchase for notification on return
+                localStorage.setItem('pending_purchase', JSON.stringify({
+                    planName: pack.name,
+                    price: pack.price,
+                    credits: pack.credits
+                }));
                 window.location.href = link;
             } else {
                 alert("Payment link not configured.");
