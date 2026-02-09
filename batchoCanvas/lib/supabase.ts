@@ -94,6 +94,10 @@ export const dbHelpers = {
             .select()
             .single();
 
+        if (error) {
+            console.error('Error in initUserProfile:', error);
+        }
+
         return { data, error };
     },
 
@@ -162,7 +166,8 @@ export const dbHelpers = {
         });
 
         if (!response.ok) {
-            const error = await response.json();
+            const error = await response.json().catch(() => ({ message: 'Failed to send email' }));
+            console.error('Email API Error:', error);
             throw new Error(error.message || 'Failed to send email');
         }
 

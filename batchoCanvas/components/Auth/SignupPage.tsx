@@ -20,7 +20,7 @@ export const SignupPage: React.FC<SignupPageProps> = ({ onSuccess, onSwitchToLog
     // Clear any existing session on mount to ensure clean signup
     React.useEffect(() => {
         const clearSession = async () => {
-            const { data: { session } } = await authHelpers.getSession();
+            const session = await authHelpers.getSession();
             if (session) {
                 await authHelpers.signOut();
             }
@@ -61,18 +61,33 @@ export const SignupPage: React.FC<SignupPageProps> = ({ onSuccess, onSwitchToLog
         }
 
         if (data.user) {
-            // Initialize User Profile (Credits)
-            await dbHelpers.initUserProfile(data.user.id);
+            try {
+                // Initialize User Profile (Credits)
+                const { error: initError } = await dbHelpers.initUserProfile(data.user.id);
+                if (initError) {
+                    console.error('Profile initialization failed:', initError);
+                    setError(`Account created, but profile setup failed: ${initError.message}. Please contact support.`);
+                    setLoading(false);
+                    return;
+                }
 
-            // Send Admin Notification (Pass token if backend verification is enabled later)
-            await dbHelpers.sendEmail({
-                to: email,
-                subject: 'New User Signup',
-                message: fullName,
-                type: 'signup'
-            }).catch(console.error);
+                // Send Admin Notification
+                await dbHelpers.sendEmail({
+                    to: email,
+                    subject: 'New User Signup',
+                    message: fullName,
+                    type: 'signup'
+                }).catch(err => {
+                    console.error('Admin notification failed:', err);
+                    // We don't block the user if just the admin notification fails
+                });
 
-            onSuccess();
+                onSuccess();
+            } catch (err: any) {
+                console.error('Signup post-process error:', err);
+                setError('A problem occurred while setting up your account. Please try logging in.');
+                setLoading(false);
+            }
         }
     };
 
