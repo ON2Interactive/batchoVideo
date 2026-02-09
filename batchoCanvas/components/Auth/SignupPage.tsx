@@ -83,7 +83,10 @@ export const SignupPage: React.FC<SignupPageProps> = ({ onSuccess, onSwitchToLog
                 });
 
                 onSuccess();
+                // Note: The parent AppRouter handles navigation to /dashboard.
+                // We trust Supabase will show a verification warning if they try to use features unverified.
             } catch (err: any) {
+
                 console.error('Signup post-process error:', err);
                 setError('A problem occurred while setting up your account. Please try logging in.');
                 setLoading(false);

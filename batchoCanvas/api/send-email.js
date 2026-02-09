@@ -87,12 +87,16 @@ export default async function handler(req, res) {
                     <li>Export when it’s ready</li>
                 </ul>
                 <p>batchoCanvas is designed to stay out of your way and give you control where it matters.</p>
+                <p><strong>Verification Required:</strong> If you haven't verified your email yet, please do so now to unlock all features.</p>
+                <br/>
                 <p>Start creating when you’re ready.</p>
+                <div style="margin-top: 25px;">
+                    <a href="https://www.batchocanvas.com/signin" style="background-color: #667eea; color: #fff; padding: 12px 24px; text-decoration: none; border-radius: 8px; font-weight: bold; display: inline-block;">Verify Email & Start Creating →</a>
+                </div>
                 <br/>
-                <p>— The batchoCanvas Team</p>
-                <br/>
-                <a href="https://www.batchocanvas.com/editor" style="background-color: #000; color: #fff; padding: 12px 24px; text-decoration: none; border-radius: 4px; font-weight: bold;">Start Creating →</a>
+                <p style="color: #888; fontSize: 12px;">— The batchoCanvas Team</p>
             </div>
+
         `;
 
             emailPromises.push(fetch('https://api.sendgrid.com/v3/mail/send', {
