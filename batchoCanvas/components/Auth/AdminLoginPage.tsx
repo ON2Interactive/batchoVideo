@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Shield } from 'lucide-react';
-import { authHelpers } from '../../lib/supabase';
+import { authHelpers, adminHelpers } from '../../lib/supabase';
 
 interface AdminLoginPageProps {
     onSuccess: () => void;
@@ -17,32 +17,35 @@ export const AdminLoginPage: React.FC<AdminLoginPageProps> = ({ onSuccess }) => 
         setError('');
         setLoading(true);
 
-        // Admin credentials from environment variables
-        const ADMIN_EMAIL = import.meta.env.VITE_ADMIN_EMAIL;
-        const ADMIN_PASSWORD = import.meta.env.VITE_ADMIN_PASSWORD;
+        try {
+            // Primarily use Supabase Auth for the source of truth
+            const { data, error: authError } = await authHelpers.signIn(email, password);
 
-        if (email === ADMIN_EMAIL && password === ADMIN_PASSWORD) {
-            try {
-                // Also attempt to sign in to Supabase to get RLS access
-                const { error: authError } = await authHelpers.signIn(email, password);
-
-                if (authError) {
-                    // Try to sign up if potential user doesn't exist (optional auto-provisioning)
-                    // For now, we'll just log it and proceed with local admin session
-                    console.error('Supabase admin auth failed:', authError);
-                }
-
-                // Store admin session in localStorage
-                localStorage.setItem('admin_authenticated', 'true');
-                onSuccess();
-            } catch (err) {
-                console.error('Login error:', err);
-                // Fallback to local only if network fails
-                localStorage.setItem('admin_authenticated', 'true');
-                onSuccess();
+            if (authError) {
+                setError('Invalid credentials or authentication error.');
+                setLoading(false);
+                return;
             }
-        } else {
-            setError('Invalid admin credentials');
+
+            if (data?.user) {
+                // Secondary check: Verify if the user has the is_admin flag in the database
+                const isAdmin = await adminHelpers.isUserAdmin(data.user.id);
+
+                if (isAdmin) {
+                    console.log('✅ Admin authentication successful');
+                    // Store admin session in localStorage
+                    localStorage.setItem('admin_authenticated', 'true');
+                    onSuccess();
+                } else {
+                    console.error('❌ User is not an admin');
+                    setError('Access denied: You do not have admin privileges.');
+                    // Sign them out if they aren't an admin but tried to login here
+                    await authHelpers.signOut();
+                }
+            }
+        } catch (err) {
+            console.error('Login error:', err);
+            setError('An unexpected error occurred during login.');
         }
 
         setLoading(false);
