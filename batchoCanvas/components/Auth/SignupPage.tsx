@@ -17,6 +17,17 @@ export const SignupPage: React.FC<SignupPageProps> = ({ onSuccess, onSwitchToLog
     const [loading, setLoading] = useState(false);
     const { executeRecaptcha } = useRecaptcha();
 
+    // Clear any existing session on mount to ensure clean signup
+    React.useEffect(() => {
+        const clearSession = async () => {
+            const { data: { session } } = await authHelpers.getSession();
+            if (session) {
+                await authHelpers.signOut();
+            }
+        };
+        clearSession();
+    }, []);
+
     const handleSignup = async (e: React.FormEvent) => {
         e.preventDefault();
         setError('');
