@@ -153,11 +153,20 @@ export const dbHelpers = {
     },
 
     async sendEmail(payload: { to: string, subject: string, message: string, type: 'contact' | 'signup' }) {
-        const { data, error } = await supabase.functions.invoke('send-email', {
-            body: payload
+        const response = await fetch('/api/send-email', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(payload),
         });
-        if (error) throw error;
-        return data;
+
+        if (!response.ok) {
+            const error = await response.json();
+            throw new Error(error.message || 'Failed to send email');
+        }
+
+        return response.json();
     },
 };
 
