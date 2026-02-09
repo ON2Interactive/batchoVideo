@@ -267,23 +267,14 @@ export const adminHelpers = {
     },
 
     async deleteUser(userId: string) {
-        // First delete user's projects
-        const { error: projectError } = await supabase
-            .from('projects')
-            .delete()
-            .eq('user_id', userId);
+        // Use RPC to bypass RLS issues for admin deletes
+        const { error } = await supabase.rpc('admin_delete_user', {
+            target_user_id: userId
+        });
 
-        if (projectError) {
-            console.error("Error deleting projects:", projectError);
-            return { error: projectError };
+        if (error) {
+            console.error("RPC Delete failed:", error);
         }
-
-        // Then delete user profile
-        const { error } = await supabase
-            .from('profiles')
-            .delete()
-            .eq('id', userId);
-
         return { error };
     },
 
