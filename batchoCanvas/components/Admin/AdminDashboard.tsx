@@ -24,11 +24,18 @@ export const AdminDashboard: React.FC<{ onLogout: () => void }> = ({ onLogout })
     const [loading, setLoading] = useState(true);
     const [searchQuery, setSearchQuery] = useState('');
     const [editingUserId, setEditingUserId] = useState<string | null>(null);
+    const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null);
     const [editCredits, setEditCredits] = useState<number>(0);
+    const [statusMessage, setStatusMessage] = useState<{ text: string, type: 'success' | 'error' | 'info' } | null>(null);
 
     useEffect(() => {
         loadData();
     }, []);
+
+    const showStatus = (text: string, type: 'success' | 'error' | 'info' = 'info') => {
+        setStatusMessage({ text, type });
+        setTimeout(() => setStatusMessage(null), 5000);
+    };
 
     const loadData = async () => {
         setLoading(true);
@@ -43,27 +50,46 @@ export const AdminDashboard: React.FC<{ onLogout: () => void }> = ({ onLogout })
     };
 
     const handleUpdateCredits = async (userId: string) => {
-        await adminHelpers.updateUserCredits(userId, editCredits);
-        setEditingUserId(null);
-        loadData();
+        const { error } = await adminHelpers.updateUserCredits(userId, editCredits);
+        if (error) {
+            showStatus(`Failed to update credits: ${error.message}`, 'error');
+        } else {
+            showStatus('Credits updated successfully', 'success');
+            setEditingUserId(null);
+            loadData();
+        }
     };
 
     const handleDeleteUser = async (userId: string) => {
-        if (confirm('Are you sure you want to delete this user? This action cannot be undone.')) {
+        console.log("AdminDashboard: Starting delete for", userId);
+        showStatus('Deleting user and projects...', 'info');
+
+        try {
             const { error } = await adminHelpers.deleteUser(userId);
             if (error) {
                 console.error("Delete failed:", error);
-                alert(`Failed to delete user: ${error.message}`);
+                showStatus(`Delete failed: ${error.message}`, 'error');
+                alert(`Delete failed: ${error.message}`);
             } else {
-                loadData();
-                alert("User deleted successfully.");
+                console.log("Delete success!");
+                showStatus('User deleted successfully', 'success');
+                setConfirmDeleteId(null);
+                await loadData();
             }
+        } catch (err: any) {
+            console.error("Unexpected delete error:", err);
+            showStatus(`Error: ${err.message}`, 'error');
         }
     };
 
     const handleToggleAdmin = async (userId: string, currentStatus: boolean) => {
-        await adminHelpers.toggleAdminStatus(userId, !currentStatus);
-        loadData();
+        const { error } = await adminHelpers.toggleAdminStatus(userId, !currentStatus);
+        if (error) {
+            showStatus(`Failed to toggle admin: ${error.message}`, 'error');
+        } else {
+            showStatus(`Admin status ${!currentStatus ? 'granted' : 'removed'}`, 'success');
+            loadData();
+        }
     };
 
     const filteredUsers = users.filter(user =>
@@ -109,6 +135,24 @@ export const AdminDashboard: React.FC<{ onLogout: () => void }> = ({ onLogout })
                     Logout
                 </button>
             </div>
+
+            {/* Status Bar */}
+            {statusMessage && (
+                <div style={{
+                    position: 'sticky',
+                    top: 0,
+                    zIndex: 100,
+                    padding: '0.75rem 2rem',
+                    backgroundColor: statusMessage.type === 'error' ? '#ef4444' : (statusMessage.type === 'success' ? '#10b981' : '#3b82f6'),
+                    color: '#fff',
+                    textAlign: 'center',
+                    fontWeight: 'bold',
+                    fontSize: '0.875rem',
+                    boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)'
+                }}>
+                    {statusMessage.text}
+                </div>
+            )}
 
             <div style={{ padding: '2rem' }}>
                 {/* Stats Cards */}
@@ -240,13 +284,32 @@ export const AdminDashboard: React.FC<{ onLogout: () => void }> = ({ onLogout })
                                             >
                                                 <Shield size={16} color={user.is_admin ? '#60a5fa' : '#888'} />
                                             </button>
-                                            <button
-                                                onClick={() => handleDeleteUser(user.id)}
-                                                style={{ padding: '0.5rem', backgroundColor: '#1a1a1a', border: '1px solid #333', borderRadius: '0.25rem', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
-                                                title="Delete user"
-                                            >
-                                                <Trash2 size={16} color="#ef4444" />
-                                            </button>
+
+                                            {confirmDeleteId === user.id ? (
+                                                <div style={{ display: 'flex', gap: '0.25rem' }}>
+                                                    <button
+                                                        onClick={() => handleDeleteUser(user.id)}
+                                                        style={{ padding: '0.25rem 0.5rem', backgroundColor: '#ef4444', color: '#fff', border: 'none', borderRadius: '0.25rem', cursor: 'pointer', fontSize: '10px', fontWeight: 'bold' }}
+                                                    >
+                                                        CONFIRM DELETE
+                                                    </button>
+                                                    <button
+                                                        onClick={() => setConfirmDeleteId(null)}
+                                                        style={{ padding: '0.25rem 0.5rem', backgroundColor: '#333', color: '#fff', border: 'none', borderRadius: '0.25rem', cursor: 'pointer', fontSize: '10px' }}
+                                                    >
+                                                        ESC
+                                                    </button>
+                                                </div>
+                                            ) : (
+                                                <button
+                                                    onClick={() => setConfirmDeleteId(user.id)}
+                                                    style={{ padding: '0.5rem', backgroundColor: '#1a1a1a', border: '1px solid #333', borderRadius: '0.25rem', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+                                                    title="Delete user"
+                                                    disabled={user.is_admin && user.email === 'kipme001@gmail.com'}
+                                                >
+                                                    <Trash2 size={16} color="#ef4444" />
+                                                </button>
+                                            )}
                                         </div>
                                     </td>
                                 </tr>
