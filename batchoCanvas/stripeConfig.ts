@@ -15,5 +15,24 @@ export const STRIPE_CONFIG = {
   },
 
   // 2. Set to 'true' to use the real links, 'false' for the demo simulation.
-  IS_LIVE: true
+  IS_LIVE: true,
+
+  // 3. Plan Details for Reference
+  PLANS: {
+    STARTER: {
+      name: 'Starter Pack',
+      price: 10,
+      credits: 600
+    },
+    PRO: {
+      name: 'Pro Pack',
+      price: 25,
+      credits: 1800
+    },
+    BRAND: {
+      name: 'Brand Pack',
+      price: 50,
+      credits: 4000
+    }
+  }
 };

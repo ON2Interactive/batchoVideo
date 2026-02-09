@@ -225,6 +225,14 @@ const AppRouter: React.FC = () => {
     const handleSignupSuccess = () => {
         if (pendingPlan && STRIPE_CONFIG.LINKS[pendingPlan as keyof typeof STRIPE_CONFIG.LINKS]) {
             // Redirect to Stripe if there was a pending plan
+            const planDetails = STRIPE_CONFIG.PLANS[pendingPlan as keyof typeof STRIPE_CONFIG.PLANS];
+            if (planDetails) {
+                localStorage.setItem('pending_purchase', JSON.stringify({
+                    planName: planDetails.name,
+                    price: planDetails.price,
+                    credits: planDetails.credits
+                }));
+            }
             window.location.href = STRIPE_CONFIG.LINKS[pendingPlan as keyof typeof STRIPE_CONFIG.LINKS];
         } else {
             window.history.pushState({}, '', '/dashboard');
@@ -262,6 +270,14 @@ const AppRouter: React.FC = () => {
         if (session) {
             // User is logged in, go straight to Stripe
             if (STRIPE_CONFIG.LINKS[planId as keyof typeof STRIPE_CONFIG.LINKS]) {
+                const planDetails = STRIPE_CONFIG.PLANS[planId as keyof typeof STRIPE_CONFIG.PLANS];
+                if (planDetails) {
+                    localStorage.setItem('pending_purchase', JSON.stringify({
+                        planName: planDetails.name,
+                        price: planDetails.price,
+                        credits: planDetails.credits
+                    }));
+                }
                 window.location.href = STRIPE_CONFIG.LINKS[planId as keyof typeof STRIPE_CONFIG.LINKS];
             }
         } else {
