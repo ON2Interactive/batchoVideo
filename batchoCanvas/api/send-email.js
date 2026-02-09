@@ -44,6 +44,16 @@ export default async function handler(req, res) {
             <p><strong>Message:</strong></p>
             <p>${message}</p>
         `;
+        } else if (type === 'purchase') {
+            adminSubject = 'New Credit Purchase 💰';
+            const { planName, credits, price } = JSON.parse(message);
+            adminContent = `
+            <h3>New Purchase!</h3>
+            <p><strong>User Email:</strong> ${to}</p>
+            <p><strong>Plan:</strong> ${planName}</p>
+            <p><strong>Credits:</strong> ${credits}</p>
+            <p><strong>Amount:</strong> $${price}</p>
+            `;
         }
 
         const emailPromises = [];
@@ -96,6 +106,36 @@ export default async function handler(req, res) {
                     from: { email: 'hello@batchocanvas.com', name: 'batchoCanvas Team' },
                     content: [{ type: 'text/html', value: welcomeContent }],
                 }),
+            }));
+        }
+
+        // 3. Add to SendGrid Contacts (Marketing) - Only for signup
+        if (type === 'signup') {
+            const firstName = message.split(' ')[0] || '';
+            const lastName = message.split(' ').slice(1).join(' ') || '';
+
+            emailPromises.push(fetch('https://api.sendgrid.com/v3/marketing/contacts', {
+                method: 'PUT',
+                headers: {
+                    'Content-Type': 'application/json',
+                    Authorization: `Bearer ${SENDGRID_API_KEY}`,
+                },
+                body: JSON.stringify({
+                    contacts: [{
+                        email: to,
+                        first_name: firstName,
+                        last_name: lastName
+                    }]
+                }),
+            }).then(async (res) => {
+                if (!res.ok) {
+                    const err = await res.json().catch(() => ({}));
+                    console.error('Failed to add contact to SendGrid:', err);
+                    // Don't throw here, as email sending is more important
+                } else {
+                    console.log('Successfully added contact to SendGrid');
+                }
+                return res;
             }));
         }
 
