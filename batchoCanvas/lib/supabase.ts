@@ -263,10 +263,15 @@ export const adminHelpers = {
 
     async deleteUser(userId: string) {
         // First delete user's projects
-        await supabase
+        const { error: projectError } = await supabase
             .from('projects')
             .delete()
             .eq('user_id', userId);
+
+        if (projectError) {
+            console.error("Error deleting projects:", projectError);
+            return { error: projectError };
+        }
 
         // Then delete user profile
         const { error } = await supabase
