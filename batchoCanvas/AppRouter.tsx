@@ -82,6 +82,8 @@ const AppRouter: React.FC = () => {
         } else if (path === '/signup') {
             setView('signup');
         } else if (path === '/admin') {
+            setView('admin');
+        } else if (path === '/admin-login') {
             setView('adminLogin');
         }
     }, [location.pathname]);
@@ -121,6 +123,10 @@ const AppRouter: React.FC = () => {
                 setView('dashboard');
             } else if (path.startsWith('/editor')) {
                 setView('editor');
+            } else if (path === '/admin') {
+                setView('admin');
+            } else if (path === '/admin-login') {
+                setView('adminLogin');
             } else {
                 // Default for unknown authenticated routes? 
                 // Maybe check if it matches other public routes
@@ -132,6 +138,8 @@ const AppRouter: React.FC = () => {
             }
         } else {
             if (path === '/admin') {
+                setView('admin');
+            } else if (path === '/admin-login') {
                 setView('adminLogin');
             } else if (path === '/contact') {
                 setView('contact');
@@ -182,7 +190,7 @@ const AppRouter: React.FC = () => {
     const handleAdminLogout = () => {
         localStorage.removeItem('admin_authenticated');
         setIsAdminAuthenticated(false);
-        window.history.pushState({}, '', '/');
+        window.history.pushState({}, '', '/admin-login');
         setView('adminLogin');
     };
 

@@ -88,7 +88,10 @@ export const AdminDashboard: React.FC<{ onLogout: () => void }> = ({ onLogout })
             {/* Header */}
             <div style={{ borderBottom: '1px solid #1a1a1a', padding: '1rem 2rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
-                    <div style={{ height: '32px' }}>
+                    <div
+                        style={{ height: '20px', cursor: 'pointer' }}
+                        onClick={() => window.location.href = '/'}
+                    >
                         <img src="/batchoCanvas-Logo-White.svg" alt="batchoCanvas" style={{ height: '100%' }} />
                     </div>
                     <span style={{ color: '#666', fontSize: '0.875rem' }}>Admin Dashboard</span>
