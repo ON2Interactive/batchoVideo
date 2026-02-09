@@ -114,6 +114,8 @@ export default async function handler(req, res) {
             const firstName = message.split(' ')[0] || '';
             const lastName = message.split(' ').slice(1).join(' ') || '';
 
+            const listIds = process.env.SENDGRID_LIST_ID ? [process.env.SENDGRID_LIST_ID] : [];
+
             emailPromises.push(fetch('https://api.sendgrid.com/v3/marketing/contacts', {
                 method: 'PUT',
                 headers: {
@@ -121,6 +123,7 @@ export default async function handler(req, res) {
                     Authorization: `Bearer ${SENDGRID_API_KEY}`,
                 },
                 body: JSON.stringify({
+                    list_ids: listIds,
                     contacts: [{
                         email: to,
                         first_name: firstName,
