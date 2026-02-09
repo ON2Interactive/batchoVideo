@@ -77,7 +77,7 @@ const Navigation: React.FC<NavigationProps> = ({ onGetStarted }) => {
                         onClick={() => handleNavigation('/signup')}
                         className="text-white hover:text-blue-400 transition-colors text-[0.95rem]"
                     >
-                        Create Now
+                        Try for Free
                     </button>
 
                     {/* Removed blue button styling, kept text link for desktop consistency or removed as per request for consistency? 

@@ -190,6 +190,10 @@ const AppRouter: React.FC = () => {
                 setView('signup');
             } else if (path === '/dashboard') {
                 setView('login'); // Protect dashboard
+            } else if (path.startsWith('/editor')) {
+                // Protect editor -> Redirect to Signup
+                window.history.pushState({}, '', '/signup');
+                setView('signup');
             } else {
                 setView('landing');
             }
