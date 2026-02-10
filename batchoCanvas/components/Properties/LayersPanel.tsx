@@ -9,21 +9,27 @@ import { Layer, LayerType, ImageLayer } from '../../types';
 interface Props {
   layers: Layer[];
   selectedLayerId: string | null;
-  onSelect: (id: string) => void;
+  onSelect: (id: string, isMulti?: boolean) => void;
   onUpdateLayer: (id: string, updates: Partial<Layer>) => void;
   onDuplicateLayer: (id: string) => void;
   onDeleteLayer: (id: string) => void;
   onReorder: (newLayers: Layer[]) => void;
+  onMask?: (selectedIds: string[]) => void;
+  onUnmask?: (groupId: string) => void;
+  selectedLayerIds?: string[]; // Support multi-selection
 }
 
 const LayersPanel: React.FC<Props> = ({
   layers,
   selectedLayerId,
+  selectedLayerIds = [],
   onSelect,
   onUpdateLayer,
   onDuplicateLayer,
   onDeleteLayer,
-  onReorder
+  onReorder,
+  onMask,
+  onUnmask
 }) => {
   const [draggedIndex, setDraggedIndex] = useState<number | null>(null);
   const [editingId, setEditingId] = useState<string | null>(null);
@@ -79,7 +85,29 @@ const LayersPanel: React.FC<Props> = ({
     <div className="p-4 flex flex-col gap-2">
       <div className="flex items-center justify-between mb-2">
         <h3 className="text-xs font-bold text-zinc-500 tracking-wider">Layers</h3>
-        <span className="text-[10px] text-zinc-600 font-mono">{layers.length} items</span>
+        <div className="flex gap-2">
+          {/* Mask Action */}
+          {onMask && (selectedLayerIds.length === 2 || (selectedLayerIds.length === 0 && selectedLayerId)) && (
+            <button
+              onClick={() => onMask(selectedLayerIds.length > 0 ? selectedLayerIds : (selectedLayerId ? [selectedLayerId] : []))}
+              className="text-[10px] bg-zinc-800 hover:bg-zinc-700 text-zinc-300 px-2 py-0.5 rounded border border-zinc-700"
+              disabled={selectedLayerIds.length !== 2}
+              title="Select 2 layers to mask (Top masks Bottom)"
+            >
+              Mask
+            </button>
+          )}
+          {/* Unmask Action */}
+          {onUnmask && selectedLayerId && layers.find(l => l.id === selectedLayerId && l.type === LayerType.GROUP && (l as any).children?.some((c: any) => c.isMask)) && (
+            <button
+              onClick={() => onUnmask(selectedLayerId)}
+              className="text-[10px] bg-zinc-800 hover:bg-zinc-700 text-zinc-300 px-2 py-0.5 rounded border border-zinc-700"
+            >
+              Unmask
+            </button>
+          )}
+          <span className="text-[10px] text-zinc-600 font-mono">{layers.length} items</span>
+        </div>
       </div>
       <div className="flex flex-col gap-1 max-h-60 overflow-y-auto no-scrollbar">
         {displayLayers.length === 0 ? (
@@ -100,8 +128,11 @@ const LayersPanel: React.FC<Props> = ({
                 onDragStart={() => handleDragStart(idx)}
                 onDragOver={(e) => handleDragOver(e, idx)}
                 onDragEnd={() => setDraggedIndex(null)}
-                onClick={() => onSelect(layer.id)}
-                className={`group flex items-center gap-2 px-2 py-1.5 rounded text-xs cursor-pointer transition-all border ${isSelected
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onSelect(layer.id, e.shiftKey || e.metaKey || e.ctrlKey);
+                }}
+                className={`group flex items-center gap-2 px-2 py-1.5 rounded text-xs cursor-pointer transition-all border ${isSelected || selectedLayerIds.includes(layer.id)
                   ? 'bg-blue-600/10 border-blue-500 text-blue-400'
                   : 'bg-zinc-800/50 border-transparent text-zinc-400 hover:bg-zinc-800 hover:text-zinc-200'
                   } ${draggedIndex === idx ? 'opacity-50 scale-95' : 'opacity-100'}`}

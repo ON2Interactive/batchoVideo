@@ -12,6 +12,13 @@ export type AspectRatio =
   | 'Trade Paperback Portrait' | 'Trade Paperback Landscape'
   | 'Magazine Portrait' | 'Magazine Landscape';
 
+export interface ExportConfig {
+  format: 'png' | 'video' | 'pdf';
+  targetWidth: number;
+  duration: number; // in milliseconds
+  label: string;
+}
+
 export interface Point {
   x: number;
   y: number;
@@ -26,7 +33,22 @@ export enum LayerType {
   POLYGON = 'POLYGON',
   TRIANGLE = 'TRIANGLE',
   STAR = 'STAR',
-  GROUP = 'GROUP', // Added support for groups
+  GROUP = 'GROUP',
+  ARROW = 'ARROW',
+  DIAMOND = 'DIAMOND',
+  HEART = 'HEART',
+  TRAPEZOID = 'TRAPEZOID',
+}
+
+export interface LayerKeyframe {
+  time: number;        // time in milliseconds
+  x?: number;
+  y?: number;
+  rotation?: number;
+  opacity?: number;
+  width?: number;
+  height?: number;
+  fontSize?: number;   // for TextLayer
 }
 
 export interface BaseLayer {
@@ -42,6 +64,8 @@ export interface BaseLayer {
   visible?: boolean;
   locked?: boolean;
   blendMode?: string;
+  isMask?: boolean; // NEW: Identification for masking layers
+  keyframes?: LayerKeyframe[]; // NEW: Animation keyframes
 }
 
 export interface GroupLayer extends BaseLayer {
@@ -62,7 +86,7 @@ export interface TextLayer extends BaseLayer {
 }
 
 export interface ShapeLayer extends BaseLayer {
-  type: LayerType.RECT | LayerType.CIRCLE | LayerType.LINE | LayerType.POLYGON | LayerType.TRIANGLE | LayerType.STAR;
+  type: LayerType.RECT | LayerType.CIRCLE | LayerType.LINE | LayerType.POLYGON | LayerType.TRIANGLE | LayerType.STAR | LayerType.ARROW | LayerType.DIAMOND | LayerType.HEART | LayerType.TRAPEZOID;
   fill: string;
   stroke: string;
   strokeWidth: number;
@@ -108,6 +132,10 @@ export interface EditorState {
   history: Page[][];
   historyIndex: number;
   isPro?: boolean;
+  // Timeline State
+  playheadTime: number; // current time in ms
+  isPlaying: boolean;
+  selectedKeyframe: { layerId: string, time: number } | null;
 }
 
 export interface Project {

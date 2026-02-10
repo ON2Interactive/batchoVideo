@@ -1,19 +1,23 @@
 
 import React, { useState, useRef, useEffect } from 'react';
-import { 
-  MousePointer2, 
+import {
+  MousePointer2,
   Hand,
-  Type, 
-  Square, 
-  Circle, 
-  Minus, 
-  Image as ImageIcon, 
+  Type,
+  Square,
+  Circle,
+  Minus,
+  Image as ImageIcon,
   Video as VideoIcon,
   ChevronRight,
   Shapes as ShapesIcon,
   Triangle as TriangleIcon,
   Hexagon,
-  Star as StarIcon
+  Star as StarIcon,
+  ArrowRight,
+  Diamond,
+  Heart,
+  Component
 } from 'lucide-react';
 import { LayerType } from '../../types';
 
@@ -48,6 +52,10 @@ const Toolbar: React.FC<Props> = ({ onAddElement, onToolSelect, activeTool }) =>
     { id: LayerType.TRIANGLE, icon: TriangleIcon, label: 'Triangle' },
     { id: LayerType.POLYGON, icon: Hexagon, label: 'Polygon' },
     { id: LayerType.STAR, icon: StarIcon, label: 'Star' },
+    { id: LayerType.ARROW, icon: ArrowRight, label: 'Arrow' },
+    { id: LayerType.DIAMOND, icon: Diamond, label: 'Diamond' },
+    { id: LayerType.HEART, icon: Heart, label: 'Heart' },
+    { id: LayerType.TRAPEZOID, icon: Component, label: 'Trapezoid' },
     { id: LayerType.LINE, icon: Minus, label: 'Line' },
   ];
 
@@ -64,11 +72,10 @@ const Toolbar: React.FC<Props> = ({ onAddElement, onToolSelect, activeTool }) =>
           <button
             key={tool.id}
             onClick={() => onToolSelect(tool.id)}
-            className={`p-3 rounded-xl transition-all group relative ${
-              activeTool === tool.id 
-                ? 'bg-blue-600 text-white shadow-[0_0_15px_rgba(37,99,235,0.4)]' 
-                : 'text-zinc-500 hover:bg-zinc-800 hover:text-white'
-            }`}
+            className={`flex items-center justify-center w-12 h-12 rounded-xl transition-all group relative ${activeTool === tool.id
+              ? 'bg-blue-600 text-white shadow-[0_0_15px_rgba(37,99,235,0.4)]'
+              : 'text-zinc-500 hover:bg-zinc-800 hover:text-white'
+              }`}
           >
             <tool.icon size={22} strokeWidth={2} />
             <span className="absolute left-16 bg-zinc-800 text-white px-2 py-1 rounded text-[10px] font-bold uppercase tracking-wider opacity-0 group-hover:opacity-100 pointer-events-none whitespace-nowrap z-50 transition-opacity border border-zinc-700 shadow-xl">
@@ -82,7 +89,7 @@ const Toolbar: React.FC<Props> = ({ onAddElement, onToolSelect, activeTool }) =>
       <div className="flex flex-col gap-3 pt-2 w-full items-center">
         <button
           onClick={() => onAddElement(LayerType.TEXT)}
-          className="p-3 rounded-xl transition-all group relative text-zinc-500 hover:bg-zinc-800 hover:text-white"
+          className="flex items-center justify-center w-12 h-12 rounded-xl transition-all group relative text-zinc-500 hover:bg-zinc-800 hover:text-white"
         >
           <Type size={22} strokeWidth={2} />
           <span className="absolute left-16 bg-zinc-800 text-white px-2 py-1 rounded text-[10px] font-bold uppercase tracking-wider opacity-0 group-hover:opacity-100 pointer-events-none whitespace-nowrap z-50 transition-opacity border border-zinc-700 shadow-xl">
@@ -94,9 +101,8 @@ const Toolbar: React.FC<Props> = ({ onAddElement, onToolSelect, activeTool }) =>
         <div className="relative" ref={shapeMenuRef}>
           <button
             onClick={() => setIsShapeMenuOpen(!isShapeMenuOpen)}
-            className={`p-3 rounded-xl transition-all group relative ${
-              isShapeMenuOpen ? 'bg-zinc-800 text-white' : 'text-zinc-500 hover:bg-zinc-800 hover:text-white'
-            }`}
+            className={`flex items-center justify-center w-12 h-12 rounded-xl transition-all group relative ${isShapeMenuOpen ? 'bg-zinc-800 text-white' : 'text-zinc-500 hover:bg-zinc-800 hover:text-white'
+              }`}
           >
             <ShapesIcon size={22} strokeWidth={2} />
             <ChevronRight size={10} className={`absolute bottom-1 right-1 transition-transform ${isShapeMenuOpen ? 'rotate-90' : ''}`} />
@@ -123,7 +129,7 @@ const Toolbar: React.FC<Props> = ({ onAddElement, onToolSelect, activeTool }) =>
 
         <button
           onClick={() => onAddElement('IMAGE_UPLOAD')}
-          className="p-3 rounded-xl transition-all group relative text-zinc-500 hover:bg-zinc-800 hover:text-white"
+          className="flex items-center justify-center w-12 h-12 rounded-xl transition-all group relative text-zinc-500 hover:bg-zinc-800 hover:text-white"
         >
           <ImageIcon size={22} strokeWidth={2} />
           <span className="absolute left-16 bg-zinc-800 text-white px-2 py-1 rounded text-[10px] font-bold uppercase tracking-wider opacity-0 group-hover:opacity-100 pointer-events-none whitespace-nowrap z-50 transition-opacity border border-zinc-700 shadow-xl">
@@ -133,7 +139,7 @@ const Toolbar: React.FC<Props> = ({ onAddElement, onToolSelect, activeTool }) =>
 
         <button
           onClick={() => onAddElement('VIDEO_UPLOAD')}
-          className="p-3 rounded-xl transition-all group relative text-zinc-500 hover:bg-zinc-800 hover:text-white"
+          className="flex items-center justify-center w-12 h-12 rounded-xl transition-all group relative text-zinc-500 hover:bg-zinc-800 hover:text-white"
         >
           <VideoIcon size={22} strokeWidth={2} />
           <span className="absolute left-16 bg-zinc-800 text-white px-2 py-1 rounded text-[10px] font-bold uppercase tracking-wider opacity-0 group-hover:opacity-100 pointer-events-none whitespace-nowrap z-50 transition-opacity border border-zinc-700 shadow-xl">

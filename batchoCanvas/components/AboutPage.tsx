@@ -19,8 +19,8 @@ const AboutPage: React.FC = () => {
                 <div className="max-w-4xl mx-auto space-y-24">
                     {/* Hero Section */}
                     <div className="text-center space-y-6">
-                        <h1 className="text-[24px] md:text-5xl lg:text-6xl font-bold tracking-tight">
-                            About <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-purple-500">BatchoCanvas</span>
+                        <h1 className="text-[36px] max-[480px]:text-[18px] max-[480px]:leading-[1.2] font-black tracking-tight">
+                            About BatchoCanvas
                         </h1>
                         <p className="text-base text-zinc-400 max-w-2xl mx-auto leading-relaxed">
                             We're on a mission to democratize professional video creation.
@@ -63,7 +63,7 @@ const AboutPage: React.FC = () => {
 
                     {/* Story Section */}
                     <div className="space-y-8">
-                        <h2 className="text-3xl font-bold">The Story</h2>
+                        <h1 className="text-[36px] max-[480px]:text-[18px] max-[480px]:leading-[1.2] font-black">The Story</h1>
                         <div className="prose prose-invert max-w-none text-zinc-400 space-y-6">
                             <p>
                                 It started with a simple frustration: why does editing a simple video for social media require software designed for Hollywood blockbusters?

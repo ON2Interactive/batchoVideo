@@ -1,7 +1,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { X, Download, Monitor, Image as ImageIcon, Video as VideoIcon, CheckCircle2, Clock, Crown, Lock } from 'lucide-react';
-import { AspectRatio } from '../../types';
+import { AspectRatio, ExportConfig } from '../../types';
 
 interface Props {
   onClose: () => void;
@@ -13,13 +13,6 @@ interface Props {
   suggestedDuration?: number;
   isPro?: boolean;
   onShowPro: () => void;
-}
-
-export interface ExportConfig {
-  format: 'png' | 'video' | 'pdf';
-  targetWidth: number;
-  duration: number; // in milliseconds
-  label: string;
 }
 
 const RESOLUTIONS = [
@@ -38,7 +31,6 @@ const ExportDialog: React.FC<Props> = ({
   const [durationSec, setDurationSec] = useState(Math.round(suggestedDuration));
 
   useEffect(() => {
-    console.log("ExportDialog mounted with PDF option");
     setDurationSec(Math.round(suggestedDuration));
   }, [suggestedDuration]);
 
@@ -100,9 +92,7 @@ const ExportDialog: React.FC<Props> = ({
               </button>
               <button
                 onClick={() => setFormat('video')}
-                disabled={!hasVideo}
-                className={`flex flex-col items-center gap-2 p-4 rounded-xl border-2 transition-all ${!hasVideo ? 'opacity-30 cursor-not-allowed' :
-                  format === 'video' ? 'border-blue-500 bg-blue-600/5 text-white' : 'border-zinc-800 bg-zinc-900 text-zinc-500 hover:border-zinc-700'
+                className={`flex flex-col items-center gap-2 p-4 rounded-xl border-2 transition-all ${format === 'video' ? 'border-blue-500 bg-blue-600/5 text-white' : 'border-zinc-800 bg-zinc-900 text-zinc-500 hover:border-zinc-700'
                   }`}
               >
                 <VideoIcon size={24} />

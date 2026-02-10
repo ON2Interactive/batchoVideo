@@ -12,7 +12,8 @@ import {
   TextLayer,
   ShapeLayer,
   ImageLayer,
-  Project
+  Project,
+  ExportConfig
 } from './types';
 import {
   ASPECT_RATIOS,
@@ -24,16 +25,23 @@ import Toolbar from './components/Toolbar/Toolbar';
 import PropertiesPanel from './components/Properties/PropertiesPanel';
 import CanvasElement from './components/Editor/CanvasElement';
 import ProjectGallery from './components/Editor/ProjectGallery';
-import ExportDialog, { ExportConfig } from './components/Editor/ExportDialog';
+import ExportDialog from './components/Editor/ExportDialog';
 import ProModal from './components/Modals/ProModal';
 import AIModal from './components/Modals/AIModal';
 import CreditsModal from './components/Modals/CreditsModal';
 import GridOverlay, { GridType } from './components/Editor/GridOverlay';
 
 
+import { useExport } from './hooks/useExport';
 import { aiService } from './aiService';
 import { dbHelpers, authHelpers, storageHelpers } from './lib/supabase';
 // import { db } from './db'; // Removing IDB dependency for Project saving
+import { RemixEngine } from './components/Remix/RemixEngine';
+import { useRemix } from './components/Remix/useRemix';
+import { useMasking } from './components/Masking/useMasking';
+import { TimelineEngine } from './components/Timeline/TimelineEngine';
+import Timeline from './components/Timeline/Timeline';
+import { useTimeline } from './components/Timeline/useTimeline';
 import {
   Download,
   Undo2,
@@ -149,7 +157,10 @@ const App: React.FC<AppProps> = ({ initialProject, onBackToDashboard }) => {
       history: [[initialPage]],
       historyIndex: 0,
       isPro: storedPro,
-      selectedLayerIds: []
+      selectedLayerIds: [],
+      playheadTime: 0,
+      isPlaying: false,
+      selectedKeyframe: null
     };
   });
 
@@ -165,6 +176,8 @@ const App: React.FC<AppProps> = ({ initialProject, onBackToDashboard }) => {
   const [isCanvasEditing, setIsCanvasEditing] = useState(false);
   const [activeGrid, setActiveGrid] = useState<GridType>('none');
   const [showGridMenu, setShowGridMenu] = useState(false);
+
+  // Export States
 
   // AI State
   const [aiMode, setAIMode] = useState<'motion' | 'edit_image' | 'edit_video' | null>(null);
@@ -321,11 +334,23 @@ const App: React.FC<AppProps> = ({ initialProject, onBackToDashboard }) => {
   }, [editorState.historyIndex, editorState.history.length]);
 
   const updateActivePage = useCallback((updates: Partial<Page>) => {
-    const newPages = editorState.pages.map(p =>
-      p.id === editorState.activePageId ? { ...p, ...updates } : p
-    );
-    pushToHistory(newPages);
-  }, [editorState.activePageId, editorState.pages, pushToHistory]);
+    setEditorState(prev => {
+      const newPages = prev.pages.map(p =>
+        p.id === prev.activePageId ? { ...p, ...updates } : p
+      );
+
+      // Derive history update logic here to keep it atomic
+      const newHistory = prev.history.slice(0, prev.historyIndex + 1);
+      newHistory.push([...newPages]);
+
+      return {
+        ...prev,
+        pages: newPages,
+        history: newHistory,
+        historyIndex: newHistory.length - 1
+      };
+    });
+  }, []);
 
   const handleAddElement = useCallback((type: LayerType | 'IMAGE_UPLOAD' | 'VIDEO_UPLOAD') => {
     if (type === 'IMAGE_UPLOAD' || type === 'VIDEO_UPLOAD') {
@@ -453,64 +478,290 @@ const App: React.FC<AppProps> = ({ initialProject, onBackToDashboard }) => {
       case LayerType.TEXT:
         newLayer = {
           ...base, name: 'Text', type: LayerType.TEXT, text: 'New Text', width: 600,
-          fontSize: 60, fontFamily: 'Inter', fontWeight: 'bold', fill: '#000000',
+          fontSize: 60, fontFamily: 'Helvetica', fontWeight: 'bold', fill: '#000000',
           align: 'center', lineHeight: 1.2, letterSpacing: 0
         } as TextLayer;
         break;
       case LayerType.RECT:
-        newLayer = { ...base, name: 'Rectangle', type: LayerType.RECT, fill: '#6366f1', stroke: '#4f46e5', strokeWidth: 4, cornerRadius: 8 } as ShapeLayer;
+        newLayer = { ...base, name: 'Rectangle', type: LayerType.RECT, fill: '#6366f1', stroke: '#4f46e5', strokeWidth: 0, cornerRadius: 0 } as ShapeLayer;
         break;
       case LayerType.CIRCLE:
-        newLayer = { ...base, name: 'Circle', type: LayerType.CIRCLE, fill: '#ec4899', stroke: '#db2777', strokeWidth: 4 } as ShapeLayer;
+        newLayer = { ...base, name: 'Circle', type: LayerType.CIRCLE, fill: '#ec4899', stroke: '#db2777', strokeWidth: 0 } as ShapeLayer;
         break;
       case LayerType.STAR:
-        newLayer = { ...base, name: 'Star', type: LayerType.STAR, fill: '#8b5cf6', stroke: '#7c3aed', strokeWidth: 4, sides: 5, innerRadius: 50 } as ShapeLayer;
+        newLayer = { ...base, name: 'Star', type: LayerType.STAR, fill: '#8b5cf6', stroke: '#7c3aed', strokeWidth: 0, sides: 5, innerRadius: 50 } as ShapeLayer;
         break;
       case LayerType.TRIANGLE:
-        newLayer = { ...base, name: 'Triangle', type: LayerType.TRIANGLE, fill: '#10b981', stroke: '#059669', strokeWidth: 4, sides: 3 } as ShapeLayer;
+        newLayer = { ...base, name: 'Triangle', type: LayerType.TRIANGLE, fill: '#10b981', stroke: '#059669', strokeWidth: 0, sides: 3 } as ShapeLayer;
         break;
       case LayerType.POLYGON:
-        newLayer = { ...base, name: 'Polygon', type: LayerType.POLYGON, fill: '#f59e0b', stroke: '#d97706', strokeWidth: 4, sides: 6 } as ShapeLayer;
+        newLayer = { ...base, name: 'Polygon', type: LayerType.POLYGON, fill: '#f59e0b', stroke: '#d97706', strokeWidth: 0, sides: 6 } as ShapeLayer;
         break;
       case LayerType.LINE:
         newLayer = { ...base, name: 'Line', type: LayerType.RECT, width: 400, height: 4, fill: '#6366f1', stroke: '#4f46e5', strokeWidth: 0, cornerRadius: 0 } as ShapeLayer;
+        break;
+      case LayerType.ARROW:
+        newLayer = { ...base, name: 'Arrow', type: LayerType.ARROW, fill: '#6366f1', stroke: '#4f46e5', strokeWidth: 0, width: 200, height: 100 } as ShapeLayer;
+        break;
+      case LayerType.DIAMOND:
+        newLayer = { ...base, name: 'Diamond', type: LayerType.DIAMOND, fill: '#ec4899', stroke: '#db2777', strokeWidth: 0, width: 200, height: 200 } as ShapeLayer;
+        break;
+      case LayerType.HEART:
+        newLayer = { ...base, name: 'Heart', type: LayerType.HEART, fill: '#ef4444', stroke: '#b91c1c', strokeWidth: 0, width: 200, height: 200 } as ShapeLayer;
+        break;
+      case LayerType.TRAPEZOID:
+        newLayer = { ...base, name: 'Trapezoid', type: LayerType.TRAPEZOID, fill: '#f59e0b', stroke: '#d97706', strokeWidth: 0, width: 200, height: 150 } as ShapeLayer;
         break;
       default: return;
     }
     updateActivePage({ layers: [...activePage.layers, newLayer] });
     setEditorState(prev => ({ ...prev, selectedLayerId: newLayer.id }));
     setActiveTool('select');
-  }, [activePage, updateActivePage]);
+  }, [activePage, updateActivePage, userId, projectId]);
 
   const updateLayer = useCallback((id: string, updates: Partial<Layer>) => {
-    const newLayers = activePage.layers.map(l => l.id === id ? { ...l, ...updates } : l);
-    updateActivePage({ layers: newLayers as Layer[] });
-  }, [activePage.layers, updateActivePage]);
+    setEditorState(prev => {
+      const activePage = prev.pages.find(p => p.id === prev.activePageId);
+      if (!activePage) return prev;
+
+      const updatedLayers = activePage.layers.map((l) => {
+        if (l.id === id) {
+          // Base update first
+          let updatedLayer = { ...l, ...updates };
+
+          // --- Auto-Keyframing Logic ---
+          const animatableProps = ['x', 'y', 'rotation', 'opacity', 'width', 'height', 'fontSize'];
+          const isAnimatableUpdate = Object.keys(updates).some(k => animatableProps.includes(k));
+
+          if (isAnimatableUpdate && prev.playheadTime > 0) {
+            const kfTime = prev.selectedKeyframe?.layerId === id
+              ? prev.selectedKeyframe.time
+              : prev.playheadTime;
+
+            let keyframes = [...(l.keyframes || [])];
+            let kf = keyframes.find(k => k.time === kfTime);
+
+            if (!kf && kfTime === prev.playheadTime) {
+              // Create new keyframe if it doesn't exist at this time
+              const currentView = TimelineEngine.getInterpolatedLayer(l, kfTime);
+              kf = {
+                time: kfTime,
+                x: currentView.x,
+                y: currentView.y,
+                rotation: currentView.rotation,
+                opacity: currentView.opacity,
+                width: currentView.width,
+                height: currentView.height,
+                ...(l.type === LayerType.TEXT ? { fontSize: (currentView as TextLayer).fontSize } : {})
+              };
+              keyframes.push(kf);
+              keyframes.sort((a, b) => a.time - b.time);
+
+              // Auto-select the new keyframe in the NEXT render cycle to avoid stale state issues
+              setTimeout(() => {
+                setEditorState(current => ({
+                  ...current,
+                  selectedKeyframe: { layerId: id, time: kfTime }
+                }));
+              }, 0);
+            }
+
+            if (kf) {
+              const updatedKf = { ...kf, ...updates };
+              // Filter out internal layer metadata
+              delete (updatedKf as any).id;
+              delete (updatedKf as any).name;
+              delete (updatedKf as any).type;
+
+              updatedLayer = {
+                ...updatedLayer,
+                keyframes: keyframes.map(k => k.time === kfTime ? updatedKf : k)
+              };
+            }
+          } else if (prev.selectedKeyframe && prev.selectedKeyframe.layerId === id) {
+            // Manual keyframe update
+            const kfTime = prev.selectedKeyframe.time;
+            const kf = l.keyframes?.find(k => k.time === kfTime);
+            if (kf) {
+              const updatedKf = { ...kf, ...updates };
+              delete (updatedKf as any).id;
+              delete (updatedKf as any).name;
+              delete (updatedKf as any).type;
+              updatedLayer = {
+                ...updatedLayer,
+                keyframes: l.keyframes?.map(k => k.time === kfTime ? updatedKf : k)
+              };
+            }
+          }
+          return updatedLayer;
+        }
+        return l;
+      });
+
+      // Update pages and history
+      const newPages = prev.pages.map(p =>
+        p.id === prev.activePageId ? { ...p, layers: updatedLayers as Layer[] } : p
+      );
+
+      const newHistory = prev.history.slice(0, prev.historyIndex + 1);
+      newHistory.push([...newPages]);
+
+      return {
+        ...prev,
+        pages: newPages,
+        history: newHistory,
+        historyIndex: newHistory.length - 1
+      };
+    });
+  }, [setEditorState]);
 
   const duplicateLayer = useCallback((id: string) => {
-    const source = activePage.layers.find(l => l.id === id);
-    if (!source) return;
-    const newLayer = { ...source, id: uuidv4(), name: `${source.name} Copy`, x: source.x + 20, y: source.y + 20 };
-    updateActivePage({ layers: [...activePage.layers, newLayer] });
-    setEditorState(prev => ({ ...prev, selectedLayerId: newLayer.id }));
-  }, [activePage.layers, updateActivePage]);
+    setEditorState(prev => {
+      const activePage = prev.pages.find(p => p.id === prev.activePageId);
+      if (!activePage) return prev;
+
+      const source = activePage.layers.find(l => l.id === id);
+      if (!source) return prev;
+
+      const newLayer = { ...source, id: uuidv4(), name: `${source.name} Copy`, x: source.x + 20, y: source.y + 20 };
+      const newPages = prev.pages.map(p =>
+        p.id === prev.activePageId ? { ...p, layers: [...p.layers, newLayer] } : p
+      );
+
+      const newHistory = prev.history.slice(0, prev.historyIndex + 1);
+      newHistory.push([...newPages]);
+
+      return {
+        ...prev,
+        pages: newPages,
+        history: newHistory,
+        historyIndex: newHistory.length - 1,
+        selectedLayerId: newLayer.id,
+        selectedLayerIds: [newLayer.id]
+      };
+    });
+  }, []);
 
   const reorderLayers = useCallback((newLayers: Layer[]) => {
-    updateActivePage({ layers: newLayers });
-  }, [updateActivePage]);
+    setEditorState(prev => {
+      const newPages = prev.pages.map(p =>
+        p.id === prev.activePageId ? { ...p, layers: newLayers } : p
+      );
+
+      const newHistory = prev.history.slice(0, prev.historyIndex + 1);
+      newHistory.push([...newPages]);
+
+      return {
+        ...prev,
+        pages: newPages,
+        history: newHistory,
+        historyIndex: newHistory.length - 1
+      };
+    });
+  }, []);
 
   const deleteLayer = useCallback((id: string) => {
-    const newLayers = activePage.layers.filter(l => l.id !== id);
-    updateActivePage({ layers: newLayers });
-    setEditorState(prev => ({ ...prev, selectedLayerId: null }));
-  }, [activePage.layers, updateActivePage]);
+    setEditorState(prev => {
+      const activePage = prev.pages.find(p => p.id === prev.activePageId);
+      if (!activePage) return prev;
+
+      const newLayers = activePage.layers.filter(l => l.id !== id);
+      const newPages = prev.pages.map(p =>
+        p.id === prev.activePageId ? { ...p, layers: newLayers } : p
+      );
+
+      const newHistory = prev.history.slice(0, prev.historyIndex + 1);
+      newHistory.push([...newPages]);
+
+      return {
+        ...prev,
+        pages: newPages,
+        history: newHistory,
+        historyIndex: newHistory.length - 1,
+        selectedLayerId: null,
+        selectedLayerIds: []
+      };
+    });
+  }, []);
+
+  // Centralized selection logic
+  const handleLayerSelect = useCallback((id: string | null, isMulti: boolean = false) => {
+    setEditorState(prev => {
+      const currentSelected = prev.selectedLayerIds || [];
+
+      if (!id) {
+        return { ...prev, selectedLayerId: null, selectedLayerIds: [] };
+      }
+
+      if (isMulti) {
+        // Toggle selection
+        let newSelected;
+        if (currentSelected.includes(id)) {
+          newSelected = currentSelected.filter(existingId => existingId !== id);
+        } else {
+          newSelected = [...currentSelected, id];
+        }
+
+        // Update primary selected ID (usually the last one selected)
+        return {
+          ...prev,
+          selectedLayerId: newSelected.length > 0 ? newSelected[newSelected.length - 1] : null,
+          selectedLayerIds: newSelected
+        };
+      } else {
+        // Single selection
+        return { ...prev, selectedLayerId: id, selectedLayerIds: [id] };
+      }
+    });
+  }, []);
+
+  // --- Remix Feature (Isolated) ---
+  const { handleRemix } = useRemix(activePage, editorState.pages, activeGrid, pushToHistory);
+
+  // --- Masking Feature (Isolated) ---
+  const { handleMask, handleUnmask } = useMasking(editorState, setEditorState);
+
+  // --- Pro Timeline Logic (Isolated) ---
+  const {
+    handleTogglePlay,
+    handleAddKeyframe,
+    handleKeyframeSelect,
+    handleKeyframeMove,
+    handleDeleteKeyframe
+  } = useTimeline(editorState, setEditorState);
+
+  // --- Keyboard Shortcuts ---
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.target instanceof HTMLInputElement || e.target instanceof HTMLTextAreaElement) return;
+
+      if (e.key === 'Delete' || e.key === 'Backspace') {
+        if (editorState.selectedKeyframe) {
+          handleDeleteKeyframe();
+        } else if (editorState.selectedLayerId || editorState.selectedLayerIds.length > 0) {
+          deleteLayer(editorState.selectedLayerId || editorState.selectedLayerIds[0]);
+        }
+      }
+
+      if (e.key === ' ') {
+        e.preventDefault();
+        handleTogglePlay();
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [editorState.selectedKeyframe, editorState.selectedLayerId, editorState.selectedLayerIds, editorState.isPlaying, handleDeleteKeyframe, handleTogglePlay, deleteLayer]);
+
 
   const handleWheel = (e: React.WheelEvent) => {
     if (e.ctrlKey || e.metaKey) {
       e.preventDefault();
       const zoomSpeed = 0.001;
-      const newZoom = Math.min(MAX_ZOOM, Math.max(MIN_ZOOM, editorState.zoom - e.deltaY * zoomSpeed));
-      setEditorState(prev => ({ ...prev, zoom: newZoom }));
+      setEditorState(prev => {
+        const newZoom = Math.min(MAX_ZOOM, Math.max(MIN_ZOOM, prev.zoom - e.deltaY * zoomSpeed));
+        return { ...prev, zoom: newZoom };
+      });
     } else {
       setEditorState(prev => ({
         ...prev,
@@ -520,9 +771,9 @@ const App: React.FC<AppProps> = ({ initialProject, onBackToDashboard }) => {
   };
 
   const handleMouseDown = (e: React.MouseEvent) => {
-    const isBackgroundClick = e.target === workspaceRef.current;
+    const isBackgroundClick = e.target === workspaceRef.current || e.target === e.currentTarget;
     if (isBackgroundClick) {
-      setEditorState(prev => ({ ...prev, selectedLayerId: null }));
+      setEditorState(prev => ({ ...prev, selectedLayerId: null, selectedLayerIds: [] }));
       if (document.activeElement instanceof HTMLTextAreaElement) {
         document.activeElement.blur();
       }
@@ -685,190 +936,31 @@ const App: React.FC<AppProps> = ({ initialProject, onBackToDashboard }) => {
   /* --- EXPORT LOGIC --- */
 
 
-  const executeExport = async (config: ExportConfig) => {
-    if (!stageRef.current) return;
-    try {
-      console.log('🎬 Export started:', config);
-      setIsExporting(true);
-      setExportProgress(0);
-      setStatusText("Initializing Export...");
+  /* --- EXPORT LOGIC (Refactored to Hook) --- */
+  const {
+    executeExport,
+    hasVideo,
+    maxVideoDuration,
+    isExporting: hookIsExporting,
+    downloadReadyUrl,
+    downloadReadyFilename,
+    setDownloadReadyUrl
+  } = useExport({
+    stageRef,
+    activePage,
+    projectName,
+    setEditorState,
+    updateActivePage,
+    setStatusText,
+    setExportProgress
+  });
 
-      // Allow React to re-render and hide the grid
-      await new Promise(resolve => setTimeout(resolve, 100));
+  // Sync local exporting state with hook
+  useEffect(() => {
+    setIsExporting(hookIsExporting);
+  }, [hookIsExporting]);
 
-      const stage = stageRef.current;
-      const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
-      // SANITIZED PROJECT NAME
-      const safeProjectName = (projectName || 'untitled').replace(/[^a-z0-9]/gi, '-').toLowerCase();
-      const baseFilename = `${safeProjectName}-${config.label}-${timestamp}`;
-
-      if (config.format === 'png') {
-        const pixelRatio = config.targetWidth / activePage.width;
-        console.log('📸 Attempting to capture canvas data URL...');
-        let uri;
-        try {
-          uri = stage.toDataURL({ pixelRatio });
-        } catch (error) {
-          console.error('❌ CANVAS TAINTED! Cannot export. This is due to a CORS issue with an image.', error);
-          setStatusText("Security Error: Canvas Tainted");
-          setIsExporting(false);
-          return;
-        }
-        const link = document.createElement('a');
-        link.download = `${baseFilename}.png`;
-        link.href = uri;
-        document.body.appendChild(link);
-        link.click();
-        document.body.removeChild(link);
-        setIsExporting(false);
-        console.log('✅ PNG export complete');
-        return;
-      }
-
-      if (config.format === 'pdf') {
-        const { jsPDF } = await import('jspdf');
-        const pixelRatio = 2; // Higher quality for PDF
-        const uri = stage.toDataURL({ pixelRatio });
-
-        const pdf = new jsPDF({
-          orientation: activePage.width > activePage.height ? 'landscape' : 'portrait',
-          unit: 'px',
-          format: [activePage.width, activePage.height]
-        });
-
-        pdf.addImage(uri, 'PNG', 0, 0, activePage.width, activePage.height);
-        // MANUAL DOWNLOAD TRIGGER (Chrome Fix)
-        const pdfBlob = pdf.output('blob');
-        const pdfUrl = URL.createObjectURL(pdfBlob);
-
-        setDownloadReadyUrl(pdfUrl);
-        setDownloadReadyFilename(`${baseFilename}.pdf`);
-        setStatusText("Your PDF is Ready!");
-        console.log('✅ PDF export ready for manual download');
-        return;
-      }
-
-      console.log('📹 Starting video export...');
-      setStatusText("Synchronizing Frames...");
-
-      // Reset all videos to start
-      const seekLayers = activePage.layers.map(l => {
-        if (l.type === LayerType.IMAGE && (l as ImageLayer).mediaType === 'video') return { ...l, currentTime: 0, playing: false };
-        return l;
-      });
-      setEditorState(prev => ({ ...prev, pages: prev.pages.map(p => p.id === activePage.id ? { ...p, layers: seekLayers as Layer[] } : p) }));
-      await new Promise(resolve => setTimeout(resolve, 2000));
-      console.log('✅ Videos synchronized');
-
-      // Get canvas WITHOUT resizing stage (Chrome issue)
-      const canvas = stage.container().querySelector('canvas');
-      if (!canvas) throw new Error("Canvas missing");
-      console.log('📊 Canvas size:', canvas.width, 'x', canvas.height);
-
-      const stream = canvas.captureStream(30);
-      console.log('📹 Stream created, tracks:', stream.getTracks().length);
-
-      const mimeType = MediaRecorder.isTypeSupported('video/mp4') ? 'video/mp4' : 'video/webm';
-      console.log('📹 Using MIME type:', mimeType);
-
-      if (mimeType === 'video/webm' && navigator.userAgent.indexOf('Chrome') > -1) {
-        console.warn("⚠️ Chrome detected + WebM. This usually works, but if it fails, check if 'Use hardware acceleration' is on.");
-      }
-
-      const recorder = new MediaRecorder(stream, { mimeType, videoBitsPerSecond: config.targetWidth > 2000 ? 25000000 : 8000000 });
-      const chunks: Blob[] = [];
-
-      recorder.ondataavailable = (e) => {
-        if (e.data && e.data.size > 0) {
-          chunks.push(e.data);
-        }
-      };
-
-      recorder.onstop = () => {
-        console.log('🛑 Recorder stopped, total chunks:', chunks.length);
-        if (chunks.length === 0) {
-          console.error("No data chunks recorded!");
-          alert("Video generation failed: No data recorded. Please try again.");
-          setIsExporting(false);
-          return;
-        }
-        const blob = new Blob(chunks, { type: mimeType });
-        console.log('📦 Final blob size:', blob.size, 'bytes');
-        const url = URL.createObjectURL(blob);
-
-        const link = document.createElement('a');
-        link.download = `${baseFilename}.${mimeType.includes('mp4') ? 'mp4' : 'webm'}`;
-        link.href = url;
-        document.body.appendChild(link);
-        link.click();
-        document.body.removeChild(link);
-        window.URL.revokeObjectURL(url);
-        setIsExporting(false);
-        console.log('✅ Export complete!');
-      };
-
-      setStatusText("Recording Scene...");
-      recorder.start(100); // Request data every 100ms
-      console.log('🎬 Recording started with 100ms timeslice');
-
-      // Start playing videos
-      const playLayers = seekLayers.map(l => {
-        if (l.type === LayerType.IMAGE && (l as ImageLayer).mediaType === 'video') { const { currentTime, ...rest } = l as ImageLayer; return { ...rest, playing: true }; }
-        return l;
-      });
-      setEditorState(prev => ({ ...prev, pages: prev.pages.map(p => p.id === activePage.id ? { ...p, layers: playLayers as Layer[] } : p) }));
-      console.log('▶️ Videos playing');
-
-      const duration = config.duration;
-      let elapsed = 0;
-      let isRecording = true;
-
-      // CRITICAL: Force continuous canvas redraw for Chrome MediaRecorder
-      // Chrome needs active canvas updates to capture frames
-      const forceRedraw = () => {
-        if (!isRecording) return;
-
-        // CRITICAL FOR CHROME:
-        // batchDraw() is optimized and might skip if no changes are detected.
-        // We must force a synchronous draw on layers to keep the stream active.
-        const layers = stage.children;
-        if (layers) {
-          layers.forEach((layer: any) => {
-            layer.draw(); // Force synchronous draw
-          });
-        } else {
-          stage.draw(); // Fallback
-        }
-
-        requestAnimationFrame(forceRedraw);
-      };
-
-      // Start the continuous redraw loop
-      requestAnimationFrame(forceRedraw);
-      console.log('🔄 Continuous redraw started');
-
-      const timer = setInterval(() => {
-        elapsed += 100;
-        setExportProgress(Math.min(100, (elapsed / duration) * 100));
-        if (elapsed >= duration) {
-          clearInterval(timer);
-          isRecording = false; // Stop the redraw loop
-          console.log('⏱️ Duration reached, stopping recorder');
-          recorder.stop();
-        }
-      }, 100);
-    } catch (err: any) {
-      console.error('❌ Export failed:', err);
-      setIsExporting(false);
-      alert(`Export failed: ${err.message || err.toString()}`);
-    }
-  };
-
-  const handleConfirmExport = (config: ExportConfig) => {
-    setShowExportDialog(false);
-    executeExport(config);
-  };
-
+  // Restore Keyboard Shortcuts
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       const isInputActive = document.activeElement?.tagName === 'INPUT' ||
@@ -903,6 +995,28 @@ const App: React.FC<AppProps> = ({ initialProject, onBackToDashboard }) => {
           setEditorState(prev => ({ ...prev, selectedLayerId: null }));
         }
       }
+
+      // Keyboard Nudging
+      const nudgeKeys = ['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight'];
+      if (nudgeKeys.includes(e.key) && (editorState.selectedLayerId || (editorState.selectedLayerIds && editorState.selectedLayerIds.length > 0))) {
+        e.preventDefault();
+        const step = e.shiftKey ? 10 : 1;
+        const targetIds = editorState.selectedLayerIds && editorState.selectedLayerIds.length > 0
+          ? editorState.selectedLayerIds
+          : [editorState.selectedLayerId!];
+
+        targetIds.forEach(id => {
+          const layer = activePage.layers.find(l => l.id === id);
+          if (layer) {
+            const updates: any = {};
+            if (e.key === 'ArrowUp') updates.y = layer.y - step;
+            if (e.key === 'ArrowDown') updates.y = layer.y + step;
+            if (e.key === 'ArrowLeft') updates.x = layer.x - step;
+            if (e.key === 'ArrowRight') updates.x = layer.x + step;
+            updateLayer(id, updates);
+          }
+        });
+      }
     };
     const handleKeyUp = (e: KeyboardEvent) => { if (e.code === 'Space') setIsSpacePressed(false); };
     window.addEventListener('keydown', handleKeyDown);
@@ -910,9 +1024,10 @@ const App: React.FC<AppProps> = ({ initialProject, onBackToDashboard }) => {
     return () => { window.removeEventListener('keydown', handleKeyDown); window.removeEventListener('keyup', handleKeyUp); };
   }, [editorState.selectedLayerId, activePage.layers, updateActivePage, handleUndo, handleRedo, duplicateLayer, projectName, projectId, centerWorkspace, isCanvasEditing]);
 
-  const hasVideo = activePage.layers.some(l => l.type === LayerType.IMAGE && (l as ImageLayer).mediaType === 'video');
-  const videoLayers = activePage.layers.filter(l => l.type === LayerType.IMAGE && (l as ImageLayer).mediaType === 'video') as ImageLayer[];
-  const maxVideoDuration = videoLayers.length > 0 ? Math.max(...videoLayers.map(l => l.duration || 10)) : 10;
+  const handleConfirmExport = (config: ExportConfig) => {
+    setShowExportDialog(false);
+    executeExport(config);
+  };
 
   const handleCanvasEditingToggle = (editing: boolean) => {
     setIsCanvasEditing(editing);
@@ -949,11 +1064,15 @@ const App: React.FC<AppProps> = ({ initialProject, onBackToDashboard }) => {
       history: [[initialPage]],
       historyIndex: 0,
       isPro: editorState.isPro,
-      selectedLayerIds: []
+      selectedLayerIds: [],
+      playheadTime: 0,
+      isPlaying: false,
+      selectedKeyframe: null
     });
 
     setShowGallery(false);
   };
+
 
   return (
     <div className="fixed inset-0 flex flex-col bg-zinc-950 text-zinc-100 overflow-hidden select-none z-[100]">
@@ -1159,7 +1278,7 @@ const App: React.FC<AppProps> = ({ initialProject, onBackToDashboard }) => {
                 height={activePage.height}
                 onMouseDown={(e) => {
                   if (activeTool === 'hand') return;
-                  if (e.target === e.target.getStage()) setEditorState(prev => ({ ...prev, selectedLayerId: null }));
+                  if (e.target === e.target.getStage()) setEditorState(prev => ({ ...prev, selectedLayerId: null, selectedLayerIds: [] }));
                 }}
               >
                 <KonvaLayer>
@@ -1167,18 +1286,31 @@ const App: React.FC<AppProps> = ({ initialProject, onBackToDashboard }) => {
                   {activeGuides && activeGuides.x !== undefined && <Line points={[activeGuides.x, 0, activeGuides.x, activePage.height]} stroke="#ff00ff" strokeWidth={1 / editorState.zoom} dash={[4 / editorState.zoom, 4 / editorState.zoom]} />}
                   {activeGuides && activeGuides.y !== undefined && <Line points={[0, activeGuides.y, activePage.width, activeGuides.y]} stroke="#ff00ff" strokeWidth={1 / editorState.zoom} dash={[4 / editorState.zoom, 4 / editorState.zoom]} />}
                   <GridOverlay width={activePage.width} height={activePage.height} type={isExporting ? 'none' : activeGrid} />
-                  {activePage.layers.map((layer) => (
-                    <CanvasElement
+                  {activePage.layers.map((layer) => {
+                    // Use interpolated state whenever playhead is active or keyframe is selected
+                    const isKeyframeSelected = editorState.selectedKeyframe?.layerId === layer.id;
+                    const targetTime = isKeyframeSelected
+                      ? editorState.selectedKeyframe!.time
+                      : editorState.playheadTime;
+
+                    const shouldInterpolate = editorState.isPlaying || editorState.playheadTime > 0 || isKeyframeSelected;
+
+                    const displayLayer = shouldInterpolate
+                      ? TimelineEngine.getInterpolatedLayer(layer, targetTime)
+                      : layer;
+
+                    return (<CanvasElement
                       key={layer.id}
-                      layer={layer}
+                      layer={displayLayer}
                       page={activePage}
-                      isSelected={layer.id === editorState.selectedLayerId}
-                      onSelect={() => { if (activeTool === 'select') setEditorState(prev => ({ ...prev, selectedLayerId: layer.id })); }}
+                      isSelected={layer.id === editorState.selectedLayerId || (editorState.selectedLayerIds || []).includes(layer.id)}
+                      onSelect={(id, isMulti) => { if (activeTool === 'select') handleLayerSelect(id, isMulti); }}
                       onDragMove={setActiveGuides}
                       onChange={(updates) => updateLayer(layer.id, updates)}
                       onEditingChange={handleCanvasEditingToggle}
                     />
-                  ))}
+                    );
+                  })}
                 </KonvaLayer>
               </Stage>
             </div>
@@ -1186,10 +1318,29 @@ const App: React.FC<AppProps> = ({ initialProject, onBackToDashboard }) => {
         </main>
 
         <PropertiesPanel
-          pages={editorState.pages} activePageId={editorState.activePageId}
-          selectedLayer={activePage.layers.find(l => l.id === editorState.selectedLayerId) || null}
-          onUpdateLayer={updateLayer} onDuplicateLayer={duplicateLayer} onDeleteLayer={deleteLayer} onUpdatePage={updateActivePage}
-          onSelectLayer={(id) => setEditorState(prev => ({ ...prev, selectedLayerId: id }))}
+          pages={editorState.pages}
+          activePageId={editorState.activePageId}
+          selectedLayer={(() => {
+            const layerId = editorState.selectedLayerId || editorState.selectedLayerIds[0];
+            const layer = activePage.layers.find(l => l.id === layerId);
+            if (!layer) return null;
+
+            // Mirror canvas rendering: use interpolated state for properties display
+            const isKeyframeSelected = editorState.selectedKeyframe?.layerId === layer.id;
+            const targetTime = isKeyframeSelected
+              ? editorState.selectedKeyframe!.time
+              : editorState.playheadTime;
+
+            if (editorState.isPlaying || editorState.playheadTime > 0 || isKeyframeSelected) {
+              return TimelineEngine.getInterpolatedLayer(layer, targetTime);
+            }
+            return layer;
+          })()}
+          onUpdateLayer={updateLayer}
+          onDuplicateLayer={duplicateLayer}
+          onDeleteLayer={deleteLayer}
+          onUpdatePage={updateActivePage}
+          onSelectLayer={handleLayerSelect}
           onReorderLayers={reorderLayers}
           onGenerateVideo={handleTriggerAIVideo}
           onPageAction={{
@@ -1208,6 +1359,7 @@ const App: React.FC<AppProps> = ({ initialProject, onBackToDashboard }) => {
               setEditorState(prev => ({ ...prev, activePageId: newId, selectedLayerId: null }));
             },
             delete: (id) => {
+              if (editorState.pages.length <= 1) return;
               const newPages = editorState.pages.filter(p => p.id !== id);
               pushToHistory(newPages);
               setEditorState(prev => ({ ...prev, activePageId: newPages[0].id, selectedLayerId: null }));
@@ -1217,8 +1369,25 @@ const App: React.FC<AppProps> = ({ initialProject, onBackToDashboard }) => {
               pushToHistory(newPages);
             }
           }}
+          onMask={handleMask}
+          onUnmask={handleUnmask}
+          selectedLayerIds={editorState.selectedLayerIds}
+          onRemix={handleRemix}
+          onAddKeyframe={handleAddKeyframe}
         />
       </div>
+
+      <Timeline
+        activePage={activePage}
+        playheadTime={editorState.playheadTime}
+        isPlaying={editorState.isPlaying}
+        selectedKeyframe={editorState.selectedKeyframe}
+        onPlayheadChange={(time) => setEditorState(prev => ({ ...prev, playheadTime: time, selectedKeyframe: null }))}
+        onTogglePlay={handleTogglePlay}
+        onAddKeyframe={handleAddKeyframe}
+        onKeyframeSelect={handleKeyframeSelect}
+        onKeyframeMove={handleKeyframeMove}
+      />
     </div >
   );
 };

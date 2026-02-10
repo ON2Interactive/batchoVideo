@@ -75,7 +75,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ onNewProject, onLoadProjec
                 alignItems: 'center'
             }}>
                 <div>
-                    <div style={{ height: '32px', marginBottom: '8px' }}>
+                    <div style={{ height: '20px', marginBottom: '8px' }}>
                         <img src="/batchoCanvas-Logo-White.svg" alt="batchoCanvas" style={{ height: '100%' }} />
                     </div>
                     <p style={{ color: '#888', fontSize: '14px', margin: '5px 0 0 0' }}>

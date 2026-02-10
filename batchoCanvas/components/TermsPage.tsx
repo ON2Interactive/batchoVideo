@@ -29,8 +29,8 @@ const TermsPage: React.FC<TermsPageProps> = ({ onStartEditing }) => {
 
             {/* Hero Section */}
             <section className="relative z-10 px-8 py-[100px] min-h-[400px] flex flex-col items-center justify-center max-w-[1400px] mx-auto text-center">
-                <h1 className="text-[32px] md:text-5xl lg:text-6xl font-bold leading-[1.1] tracking-tight mb-6">
-                    <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-purple-500">Terms of Use</span>
+                <h1 className="text-[36px] max-[480px]:text-[18px] max-[480px]:leading-[1.2] font-black mb-6">
+                    Terms of Use
                 </h1>
                 <p className="text-xl text-zinc-400 max-w-2xl mx-auto leading-relaxed">
                     Last updated: Nov 16, 2025

@@ -3,6 +3,7 @@ import { authHelpers, dbHelpers } from './lib/supabase';
 import { LoginPage } from './components/Auth/LoginPage';
 import { SignupPage } from './components/Auth/SignupPage';
 import { Dashboard } from './components/Dashboard/Dashboard';
+import { EmailVerificationPage } from './components/Auth/EmailVerificationPage';
 import App from './App';
 import NewLandingPage from './NewLandingPage';
 import { AdminDashboard } from './components/Admin/AdminDashboard';
@@ -23,7 +24,7 @@ import PrivacyPage from './components/PrivacyPage';
 import CookiePage from './components/CookiePage';
 import DMCAPage from './components/DMCAPage';
 
-type View = 'landing' | 'login' | 'signup' | 'dashboard' | 'editor' | 'admin' | 'adminLogin' | 'contact' | 'about' | 'useCases' | 'pricing' | 'faq' | 'help' | 'terms' | 'privacy' | 'cookie' | 'dmca';
+type View = 'landing' | 'login' | 'signup' | 'verifyEmail' | 'dashboard' | 'editor' | 'admin' | 'adminLogin' | 'contact' | 'about' | 'useCases' | 'pricing' | 'faq' | 'help' | 'terms' | 'privacy' | 'cookie' | 'dmca';
 
 const AppRouter: React.FC = () => {
     const [view, setView] = useState<View>('landing');
@@ -104,6 +105,8 @@ const AppRouter: React.FC = () => {
             setView('login');
         } else if (path === '/signup') {
             setView('signup');
+        } else if (path === '/verify-email') {
+            setView('verifyEmail');
         } else if (path === '/admin') {
             setView('admin');
         } else if (path === '/admin-login') {
@@ -188,6 +191,8 @@ const AppRouter: React.FC = () => {
                 setView('login');
             } else if (path === '/signup') {
                 setView('signup');
+            } else if (path === '/verify-email') {
+                setView('verifyEmail');
             } else if (path === '/dashboard') {
                 navigate('/signin', { replace: true });
             } else if (path.startsWith('/editor')) {
@@ -394,6 +399,10 @@ const AppRouter: React.FC = () => {
                 onSwitchToLogin={() => setView('login')}
             />
         );
+    }
+
+    if (view === 'verifyEmail') {
+        return <EmailVerificationPage />;
     }
 
     if (view === 'dashboard') {

@@ -2,6 +2,7 @@
 import React, { useState } from 'react';
 import { authHelpers, dbHelpers } from '../../lib/supabase';
 import { useRecaptcha } from '../../hooks/useRecaptcha';
+import { Mail } from 'lucide-react';
 
 interface SignupPageProps {
     onSuccess: () => void;
@@ -15,6 +16,7 @@ export const SignupPage: React.FC<SignupPageProps> = ({ onSuccess, onSwitchToLog
     const [confirmPassword, setConfirmPassword] = useState('');
     const [error, setError] = useState('');
     const [loading, setLoading] = useState(false);
+    const [verificationSent, setVerificationSent] = useState(false);
     const { executeRecaptcha } = useRecaptcha();
 
     // Clear any existing session on mount to ensure clean signup
@@ -62,29 +64,89 @@ export const SignupPage: React.FC<SignupPageProps> = ({ onSuccess, onSwitchToLog
 
         if (data.user) {
             try {
-                // Note: User Profile (Credits) is now handled by the handle_new_user database trigger.
-                // This prevents RLS issues with unconfirmed users.
+                // Determine if we should show verification screen or auto-login (Dev vs Prod)
+                // For now, we assume email verification is required if the user isn't confirmed immediately
 
-                // Send Admin Notification
-                await dbHelpers.sendEmail({
-                    to: email,
-                    subject: 'New User Signup',
-                    message: fullName,
-                    type: 'signup'
-                }).catch(err => {
-                    console.error('Admin notification failed:', err);
-                });
+                // If the session is missing, it means email confirmation is required (security setting)
+                if (!data.session) {
+                    setVerificationSent(true);
 
-                // Show success state and prompt for verification
-                onSuccess();
+                    // Still send the admin notification
+                    await dbHelpers.sendEmail({
+                        to: email,
+                        subject: 'New User Signup (Pending Verification)',
+                        message: fullName,
+                        type: 'signup'
+                    }).catch(console.error);
+
+                } else {
+                    // Auto-confirmed (e.g. dev environment disabled confirm, or no SMTP enforced yet)
+                    // Send Admin Notification
+                    await dbHelpers.sendEmail({
+                        to: email,
+                        subject: 'New User Signup',
+                        message: fullName,
+                        type: 'signup'
+                    }).catch(console.error);
+
+                    onSuccess();
+                }
+
             } catch (err: any) {
                 console.error('Signup post-process error:', err);
                 setError('A problem occurred while setting up your account. Please try logging in.');
-                setLoading(false);
             }
         }
-
+        setLoading(false);
     };
+
+    if (verificationSent) {
+        return (
+            <div style={{
+                minHeight: '100vh',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+                padding: '20px'
+            }}>
+                <div style={{
+                    backgroundColor: '#1a1a1a',
+                    borderRadius: '16px',
+                    padding: '40px',
+                    maxWidth: '450px',
+                    width: '100%',
+                    boxShadow: '0 20px 60px rgba(0,0,0,0.3)',
+                    textAlign: 'center'
+                }}>
+                    <div className="flex justify-center mb-6">
+                        <div className="w-16 h-16 bg-blue-500/20 rounded-full flex items-center justify-center">
+                            <Mail size={32} className="text-blue-400" />
+                        </div>
+                    </div>
+
+                    <h2 className="text-2xl font-bold text-white mb-4">Check your email</h2>
+
+                    <p className="text-zinc-400 mb-6 leading-relaxed">
+                        We've sent a verification link to <span className="text-white font-medium">{email}</span>.
+                        <br />
+                        Please check your inbox (and spam folder) to complete your registration.
+                    </p>
+
+                    <div className="bg-zinc-800/50 rounded-lg p-4 mb-8 text-sm text-zinc-500">
+                        <p>After clicking the link, you will be signed in automatically.</p>
+                    </div>
+
+                    <button
+                        onClick={onSwitchToLogin}
+                        className="w-full py-3 bg-white text-black rounded-full font-bold hover:bg-gray-200 transition-colors"
+                    >
+                        Return to Sign In
+                    </button>
+                </div>
+            </div>
+        );
+    }
 
     return (
         <div style={{
@@ -104,7 +166,7 @@ export const SignupPage: React.FC<SignupPageProps> = ({ onSuccess, onSwitchToLog
                 boxShadow: '0 20px 60px rgba(0,0,0,0.3)'
             }}>
                 <div style={{ textAlign: 'center', marginBottom: '30px' }}>
-                    <h1 style={{ color: '#fff', fontSize: '32px', marginBottom: '10px' }}>
+                    <h1 className="text-[36px] max-[480px]:text-[18px] max-[480px]:leading-[1.2] font-black mb-[10px] text-white">
                         Create Account
                     </h1>
                     <p style={{ color: '#888', fontSize: '14px' }}>

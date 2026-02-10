@@ -59,7 +59,7 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onSuccess, onSwitchToSignu
                 boxShadow: '0 20px 60px rgba(0,0,0,0.3)'
             }}>
                 <div style={{ textAlign: 'center', marginBottom: '30px' }}>
-                    <h1 style={{ color: '#fff', fontSize: '32px', marginBottom: '10px' }}>
+                    <h1 className="text-[36px] max-[480px]:text-[18px] max-[480px]:leading-[1.2] font-black mb-[10px] text-white">
                         Welcome Back
                     </h1>
                     <p style={{ color: '#888', fontSize: '14px' }}>

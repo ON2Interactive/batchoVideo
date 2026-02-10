@@ -40,12 +40,7 @@ const Navigation: React.FC<NavigationProps> = ({ onGetStarted }) => {
                 {/* Logo - Flush Left */}
                 <div
                     onClick={() => handleNavigation('/')}
-                    style={{
-                        height: '20px',
-                        cursor: 'pointer',
-                        display: 'flex',
-                        alignItems: 'center',
-                    }}
+                    className="h-[20px] max-[480px]:h-[16px] cursor-pointer flex items-center"
                 >
                     <img
                         src="/batchoCanvas-Logo-White.svg"

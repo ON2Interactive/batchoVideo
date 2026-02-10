@@ -1,6 +1,6 @@
 
 import React, { useRef, useEffect, useState } from 'react';
-import { Rect, Circle, Text, Image as KonvaImage, Transformer, Star, RegularPolygon, Group } from 'react-konva';
+import { Rect, Circle, Text, Image as KonvaImage, Transformer, Star, RegularPolygon, Group, Path, Arrow } from 'react-konva';
 import { Layer, LayerType, ImageLayer, TextLayer, ShapeLayer, Page, GroupLayer } from '../../types';
 import { useVideo } from '../../hooks/useVideo';
 import Konva from 'konva';
@@ -9,13 +9,14 @@ import { getEffectConfig } from '../../constants/videoEffects';
 interface Props {
   layer: Layer;
   isSelected: boolean;
-  onSelect: (e?: any) => void;
+  onSelect: (id: string, isMulti: boolean) => void;
   onChange: (newAttrs: Partial<Layer>) => void;
   page: Page;
   onDragMove?: (guides: { x?: number, y?: number } | null) => void;
   onEditingChange?: (isEditing: boolean) => void;
   onRegister?: (id: string, node: any) => void;
   isGroupChild?: boolean;
+  requestCacheUpdate?: () => void;
 }
 
 const SNAP_THRESHOLD = 5;
@@ -29,7 +30,8 @@ const CanvasElement: React.FC<Props> = ({
   onDragMove,
   onEditingChange,
   onRegister,
-  isGroupChild = false
+  isGroupChild = false,
+  requestCacheUpdate
 }) => {
   const shapeRef = useRef<any>(null);
   const trRef = useRef<Konva.Transformer>(null);
@@ -70,19 +72,25 @@ const CanvasElement: React.FC<Props> = ({
       // For blobs, we don't need cache busting (it's a unique local URL)
       img.src = isBlob ? originalSrc : `${originalSrc}${separator}t=${Date.now()}`;
 
-      img.onload = () => setImageElement(img);
+      img.onload = () => {
+        setImageElement(img);
+        if (requestCacheUpdate) requestCacheUpdate();
+      };
 
       img.onerror = () => {
         // Fallback: Load without CORS
         console.warn(`Failed to load image with CORS: ${originalSrc}. Falling back to non-CORS mode (Export may fail).`);
         const fallbackImg = new window.Image();
         fallbackImg.src = originalSrc;
-        fallbackImg.onload = () => setImageElement(fallbackImg);
+        fallbackImg.onload = () => {
+          setImageElement(fallbackImg);
+          if (requestCacheUpdate) requestCacheUpdate();
+        };
       };
     } else {
       setImageElement(null);
     }
-  }, [isImage, (layer as ImageLayer).src]);
+  }, [isImage, (layer as ImageLayer).src, requestCacheUpdate]);
 
   // Video filter logic removed to improve stability
   useEffect(() => {
@@ -274,19 +282,26 @@ const CanvasElement: React.FC<Props> = ({
     draggable: !isEditing && !layer.locked && !isGroupChild,
     visible: layer.visible !== false && !isEditing,
     listening: layer.visible !== false,
-    globalCompositeOperation: (layer.blendMode || 'source-over') as any,
+    // CRITICAL: If isMask is true, use 'destination-in' to cut out the shape
+    globalCompositeOperation: (layer.isMask ? 'destination-in' : (layer.blendMode || 'source-over')) as any,
     onClick: (e: any) => {
       if (!isGroupChild) e.cancelBubble = true;
       if (!layer.locked && !isGroupChild) {
         if (isSelected && layer.type === LayerType.TEXT) handleEditTrigger();
-        else onSelect(e);
+        else {
+          const isMulti = e.evt.shiftKey || e.evt.ctrlKey || e.evt.metaKey;
+          onSelect(layer.id, isMulti);
+        }
       }
     },
     onTap: (e: any) => {
       if (!isGroupChild) e.cancelBubble = true;
       if (!layer.locked && !isGroupChild) {
         if (isSelected && layer.type === LayerType.TEXT) handleEditTrigger();
-        else onSelect(e);
+        else {
+          const isMulti = e.evt.shiftKey || e.evt.ctrlKey || e.evt.metaKey;
+          onSelect(layer.id, isMulti);
+        }
       }
     },
     onDragMove: handleDragMove,
@@ -299,20 +314,94 @@ const CanvasElement: React.FC<Props> = ({
     switch (layer.type) {
       case LayerType.GROUP: {
         const groupLayer = layer as GroupLayer;
+
+        // MASKING LOGIC:
+        const hasMask = groupLayer.children?.some(c => c.isMask);
+        const hasPlayingVideo = groupLayer.children?.some(c => c.type === LayerType.IMAGE && (c as any).mediaType === 'video' && (c as any).playing);
+
+        // MASK ANIMATION LOOP (For Video)
+        useEffect(() => {
+          if (hasMask && hasPlayingVideo && shapeRef.current) {
+            const node = shapeRef.current;
+            const anim = new Konva.Animation(() => {
+              if (node) {
+                // Force cache update for video frame
+                node.clearCache();
+                try {
+                  node.cache({
+                    x: 0,
+                    y: 0,
+                    width: layer.width,
+                    height: layer.height,
+                    pixelRatio: 1 // Optimize for video performance
+                  });
+                } catch (e) { }
+              }
+            }, node.getLayer());
+            anim.start();
+            return () => { anim.stop(); };
+          }
+        }, [hasMask, hasPlayingVideo, layer.width, layer.height]);
+
+        const handleCacheUpdate = () => {
+          if (shapeRef.current && hasMask) {
+            setTimeout(() => {
+              if (shapeRef.current) {
+                shapeRef.current.clearCache();
+                try {
+                  shapeRef.current.cache({
+                    x: 0,
+                    y: 0,
+                    width: layer.width,
+                    height: layer.height,
+                    pixelRatio: 2
+                  });
+                } catch (e) { console.error("Cache update failed", e); }
+              }
+            }, 50);
+          }
+        };
+
         return (
-          <Group {...commonProps}>
+          <Group
+            {...commonProps}
+            ref={(node) => {
+              shapeRef.current = node;
+
+              // Handle caching for masking
+              if (node && hasMask) {
+                node.clearCache();
+                try {
+                  node.cache({
+                    x: 0,
+                    y: 0,
+                    width: layer.width,
+                    height: layer.height,
+                    pixelRatio: 2
+                  });
+                } catch (e) {
+                  console.error("Failed to cache group", e);
+                }
+              } else if (node) {
+                node.clearCache();
+              }
+            }}
+          >
             {groupLayer.children?.map((child) => (
               <CanvasElement
                 key={child.id}
                 layer={child}
                 isSelected={false}
-                onSelect={() => { }} // No-op, letting event bubble
-                onChange={() => { }} // Children shouldn't trigger direct changes from inside (complex)
+                onSelect={() => { }}
+                onChange={() => { }}
                 page={page}
                 isGroupChild={true}
-                onRegister={onRegister} // Pass registration through
+                onRegister={onRegister}
+                requestCacheUpdate={handleCacheUpdate}
               />
             ))}
+            {/* DEBUG BORDER - Remove after fix */}
+            {/* {hasMask && <Rect width={layer.width} height={layer.height} stroke="red" strokeWidth={2} listening={false} />} */}
           </Group>
         );
       }
@@ -339,6 +428,67 @@ const CanvasElement: React.FC<Props> = ({
       case LayerType.POLYGON: {
         const sl = layer as ShapeLayer;
         return <RegularPolygon {...commonProps} sides={sl.sides || 6} radius={Math.min(layer.width, layer.height) / 2} fill={sl.fill} stroke={sl.stroke} strokeWidth={sl.strokeWidth} />;
+      }
+      case LayerType.ARROW: {
+        const sl = layer as ShapeLayer;
+        // Arrow points right by default. Width controls length.
+        return <Arrow
+          {...commonProps}
+          points={[0, layer.height / 2, layer.width, layer.height / 2]}
+          pointerLength={Math.min(layer.width, layer.height) * 0.4}
+          pointerWidth={Math.min(layer.width, layer.height) * 0.4}
+          fill={sl.fill}
+          stroke={sl.stroke}
+          strokeWidth={sl.strokeWidth}
+        />;
+      }
+      case LayerType.DIAMOND: {
+        const sl = layer as ShapeLayer;
+        // 4-sided Polygon rotated 45 degrees is a Diamond/Rhombus
+        // We handle rotation via the group transformation usually, but here we bake it into the shape?
+        // Actually RegularPolygon is centered. To make it behave like a Diamond, we just need 4 sides. 
+        // Konva's RegularPolygon points up by default. 4 sides = Square (rotated 45 deg).
+        return <RegularPolygon
+          {...commonProps}
+          sides={4}
+          radius={Math.min(layer.width, layer.height) / 2}
+          fill={sl.fill}
+          stroke={sl.stroke}
+          strokeWidth={sl.strokeWidth}
+        />;
+      }
+      case LayerType.HEART: {
+        const sl = layer as ShapeLayer;
+        // SVG Path for Heart, normalized to fit box
+        // A simple heart path.
+        const pathData = "M 10,30 A 20,20 0,0,1 50,30 A 20,20 0,0,1 90,30 Q 90,60 50,90 Q 10,60 10,30 z";
+        // We need to scale this path to layer.width/height. 
+        // Konva Path creates its own bounding box. 
+        return <Path
+          {...commonProps}
+          data={pathData}
+          fill={sl.fill}
+          stroke={sl.stroke}
+          strokeWidth={sl.strokeWidth}
+          scaleX={layer.width / 100} // Path is roughly 100x100 coord system
+          scaleY={layer.height / 100}
+        />;
+      }
+      case LayerType.TRAPEZOID: {
+        const sl = layer as ShapeLayer;
+        // Trapezoid Path: Bottom is wider than top
+        // Let's assume top width is 60%, bottom is 100%
+        // Normalized 0-100 coords: Top-Left(20,0), Top-Right(80,0), Bot-Right(100,100), Bot-Left(0,100)
+        const pathData = "M 20,0 L 80,0 L 100,100 L 0,100 Z";
+        return <Path
+          {...commonProps}
+          data={pathData}
+          fill={sl.fill}
+          stroke={sl.stroke}
+          strokeWidth={sl.strokeWidth}
+          scaleX={layer.width / 100}
+          scaleY={layer.height / 100}
+        />;
       }
       case LayerType.IMAGE: {
         const il = layer as ImageLayer;

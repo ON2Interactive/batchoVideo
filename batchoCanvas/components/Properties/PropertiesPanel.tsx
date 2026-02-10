@@ -19,7 +19,7 @@ interface Props {
   onUpdateLayer: (id: string, attrs: Partial<Layer>) => void;
   onDuplicateLayer: (id: string) => void;
   onUpdatePage: (attrs: Partial<Page>) => void;
-  onSelectLayer: (id: string | null) => void;
+  onSelectLayer: (id: string | null, isMulti?: boolean) => void;
   onReorderLayers: (newLayers: Layer[]) => void;
   onGenerateVideo: (layerId: string) => void;
   onDeleteLayer: (id: string) => void;
@@ -30,6 +30,11 @@ interface Props {
     delete: (id: string) => void;
     rename: (id: string, name: string) => void;
   };
+  onMask?: (selectedIds: string[]) => void;
+  onRemix: () => void;
+  onUnmask?: (groupId: string) => void;
+  selectedLayerIds?: string[];
+  onAddKeyframe?: (layerId: string) => void;
 }
 
 const fonts = [
@@ -46,9 +51,263 @@ const fonts = [
   { name: 'Roboto Slab', family: '"Roboto Slab", serif' },
 ];
 
+const SteppedInput = ({ label, value, onChange, step = 1, suffix = "", icon: Icon, onAddKeyframe }: any) => {
+  const [localValue, setLocalValue] = useState(value);
+  const isInputFocused = useRef(false);
+  const lastEmitTime = useRef(0);
+
+  // Sync with prop when not focused AND not in cooldown
+  useEffect(() => {
+    const isRecent = Date.now() - lastEmitTime.current < 150;
+    if (!isInputFocused.current && !isRecent) {
+      setLocalValue(value);
+    }
+  }, [value]);
+
+  const handleCommit = (val: number) => {
+    const fixedVal = parseFloat(val.toFixed(2));
+    setLocalValue(fixedVal);
+    lastEmitTime.current = Date.now();
+    onChange(fixedVal);
+  };
+
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const val = parseFloat(e.target.value) || 0;
+    setLocalValue(val);
+  };
+
+  const handleBlur = () => {
+    isInputFocused.current = false;
+    handleCommit(localValue);
+  };
+
+  const handleFocus = () => {
+    isInputFocused.current = true;
+  };
+
+  return (
+    <div className="flex flex-col gap-1.5">
+      <div className="flex items-center justify-between">
+        {label && (
+          <label className="text-[11px] text-zinc-400 font-medium flex items-center gap-1.5">
+            {Icon && <Icon size={12} className="text-zinc-500" />}
+            {label}
+          </label>
+        )}
+        {onAddKeyframe && (
+          <button
+            onClick={onAddKeyframe}
+            className="p-1 hover:text-blue-500 text-zinc-600 transition-colors"
+            title="Add keyframe here"
+          >
+            <Zap size={10} fill="currentColor" />
+          </button>
+        )}
+      </div>
+      <div className="flex items-center gap-1">
+        <button
+          onClick={() => handleCommit(parseFloat((localValue - step).toFixed(2)))}
+          className="w-8 h-8 flex items-center justify-center bg-zinc-800/80 border border-zinc-700/50 rounded hover:bg-zinc-700 text-zinc-400 transition-colors active:scale-90"
+        >
+          <Minus size={14} />
+        </button>
+        <div className="flex-1 relative">
+          <input
+            type="number"
+            value={localValue}
+            step={step}
+            onFocus={handleFocus}
+            onChange={handleChange}
+            onBlur={handleBlur}
+            onKeyDown={(e) => e.key === 'Enter' && handleBlur()}
+            className="w-full bg-zinc-800 border border-zinc-700 rounded px-2 h-8 text-center text-xs text-white focus:outline-none focus:border-blue-500 appearance-none font-mono"
+          />
+          {suffix && <span className="absolute right-2 top-1/2 -translate-y-1/2 text-[10px] text-zinc-500 pointer-events-none">{suffix}</span>}
+        </div>
+        <button
+          onClick={() => handleCommit(parseFloat((localValue + step).toFixed(2)))}
+          className="w-8 h-8 flex items-center justify-center bg-zinc-800/80 border border-zinc-700/50 rounded hover:bg-zinc-700 text-zinc-400 transition-colors active:scale-90"
+        >
+          <Plus size={14} />
+        </button>
+      </div>
+    </div>
+  );
+};
+
+const InputField = ({ label, value, onChange, type = "number", step = "1", min, max, onAddKeyframe }: any) => {
+  const [localValue, setLocalValue] = useState(value);
+  const isInputFocused = useRef(false);
+  const lastEmitTime = useRef(0);
+
+  useEffect(() => {
+    const isRecent = Date.now() - lastEmitTime.current < 150;
+    if (!isInputFocused.current && !isRecent) {
+      setLocalValue(value);
+    }
+  }, [value]);
+
+  const handleCommit = (val: any) => {
+    setLocalValue(val);
+    lastEmitTime.current = Date.now();
+    onChange(val);
+  };
+
+  const handleBlur = () => {
+    isInputFocused.current = false;
+    handleCommit(localValue);
+  };
+
+  const handleFocus = () => {
+    isInputFocused.current = true;
+  };
+
+  return (
+    <div className="flex flex-col gap-1">
+      <div className="flex items-center justify-between">
+        <label className="text-[10px] text-zinc-500 font-semibold tracking-wide uppercase">{label}</label>
+        {onAddKeyframe && (
+          <button
+            onClick={onAddKeyframe}
+            className="p-1 hover:text-blue-500 text-zinc-600 transition-colors"
+            title="Add keyframe here"
+          >
+            <Zap size={10} fill="currentColor" />
+          </button>
+        )}
+      </div>
+      <input
+        type={type}
+        value={localValue}
+        step={step}
+        min={min}
+        max={max}
+        onFocus={handleFocus}
+        onBlur={handleBlur}
+        onKeyDown={(e) => e.key === 'Enter' && handleBlur()}
+        onChange={(e) => {
+          const val = type === "number" || type === "range" ? parseFloat(e.target.value) : e.target.value;
+          setLocalValue(val);
+          // For colors or range, we might want to update live
+          if (type === "color" || type === "range") {
+            onChange(val);
+          }
+        }}
+        className="bg-zinc-800 border border-zinc-700 rounded px-2 py-1.5 text-xs text-white focus:outline-none focus:border-blue-500 font-mono"
+      />
+    </div>
+  );
+};
+
+const FontSizeInput = ({ value, onChange }: { value: number, onChange: (v: number) => void }) => {
+  const [isOpen, setIsOpen] = useState(false);
+  const [localValue, setLocalValue] = useState(value);
+  const isInputFocused = useRef(false);
+  const lastEmitTime = useRef(0);
+  const dropdownRef = useRef<HTMLDivElement>(null);
+  const originalValueRef = useRef<number>(value);
+
+  // Sync with prop when not focused AND not in cooldown
+  useEffect(() => {
+    const isRecent = Date.now() - lastEmitTime.current < 150;
+    if (!isInputFocused.current && !isRecent) {
+      setLocalValue(value);
+    }
+  }, [value]);
+
+  // Update original ref when opening
+  const handleOpen = () => {
+    isInputFocused.current = true;
+    if (!isOpen) {
+      originalValueRef.current = value;
+      setIsOpen(true);
+    } else {
+      setIsOpen(false);
+    }
+  };
+
+  const handleBlur = () => {
+    isInputFocused.current = false;
+    // Don't close dropdown here, as dropdown items need to be clickable
+    // Dropdown handles its own closing via click-outside
+  };
+
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
+        if (isOpen) {
+          // Revert to original if clicking outside (cancelling preview)
+          onChange(originalValueRef.current);
+          setIsOpen(false);
+        }
+      }
+    };
+
+    if (isOpen) {
+      document.addEventListener('mousedown', handleClickOutside);
+    }
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, [isOpen, onChange]);
+
+  const presets = [6, 8, 9, 10, 11, 12, 14, 18, 24, 30, 36, 48, 60, 72, 96, 128, 144, 288];
+
+  const handleSelect = (size: number) => {
+    onChange(size);
+    originalValueRef.current = size; // Commit this size
+    setIsOpen(false);
+  };
+
+  return (
+    <div className="flex flex-col gap-1 relative" ref={dropdownRef}>
+      <label className="text-[10px] text-zinc-500 font-semibold">Size</label>
+      <div className="relative">
+        <input
+          type="number"
+          value={localValue}
+          onChange={(e) => {
+            const val = parseFloat(e.target.value) || 0;
+            setLocalValue(val);
+            lastEmitTime.current = Date.now();
+            onChange(val);
+            originalValueRef.current = val;
+          }}
+          onFocus={handleOpen}
+          onBlur={handleBlur}
+          onKeyDown={(e) => e.key === 'Enter' && (e.target as HTMLInputElement).blur()}
+          className="w-full bg-zinc-800 border border-zinc-700 rounded px-2 py-1.5 text-xs text-white focus:outline-none focus:border-blue-500 font-mono pr-6"
+        />
+        <button
+          onClick={handleOpen}
+          className="absolute right-0 top-0 bottom-0 px-2 text-zinc-500 hover:text-white"
+        >
+          <ChevronDown size={12} />
+        </button>
+      </div>
+
+      {isOpen && (
+        <div className="absolute top-full left-0 right-0 mt-1 bg-[#1e1e20] border border-zinc-700 rounded-lg shadow-xl z-[100] max-h-60 overflow-y-auto no-scrollbar ring-1 ring-black/50">
+          {presets.map(size => (
+            <button
+              key={size}
+              onClick={() => handleSelect(size)}
+              onMouseEnter={() => onChange(size)} // Live Preview
+              className={`w-full text-left px-3 py-1.5 text-xs hover:bg-blue-600 hover:text-white ${value === size ? 'bg-blue-600/20 text-blue-400' : 'text-zinc-300'}`}
+            >
+              {size} pt
+            </button>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+};
+
 const PropertiesPanel: React.FC<Props> = ({
   pages, activePageId, selectedLayer, onUpdateLayer, onDuplicateLayer, onDeleteLayer,
-  onUpdatePage, onSelectLayer, onReorderLayers, onPageAction, onGenerateVideo
+  onUpdatePage, onSelectLayer, onReorderLayers, onPageAction, onGenerateVideo,
+  onMask, onUnmask, selectedLayerIds, onRemix, onAddKeyframe
 }) => {
   const activePage = pages.find(p => p.id === activePageId);
   const [isFontOpen, setIsFontOpen] = useState(false);
@@ -71,35 +330,7 @@ const PropertiesPanel: React.FC<Props> = ({
     onUpdatePage({ aspectRatio: ratio, width: dims.w, height: dims.h });
   };
 
-  const SteppedInput = ({ label, value, onChange, step = 1, suffix = "", icon: Icon }: any) => (
-    <div className="flex flex-col gap-1.5">
-      {label && (
-        <label className="text-[11px] text-zinc-400 font-medium flex items-center gap-1.5">
-          {Icon && <Icon size={12} className="text-zinc-500" />}
-          {label}
-        </label>
-      )}
-      <div className="flex items-center gap-1">
-        <button onClick={() => onChange(parseFloat((value - step).toFixed(2)))} className="w-8 h-8 flex items-center justify-center bg-zinc-800/80 border border-zinc-700/50 rounded hover:bg-zinc-700 text-zinc-400 transition-colors active:scale-90"><Minus size={14} /></button>
-        <div className="flex-1 relative">
-          <input type="number" value={value} step={step} onChange={(e) => onChange(parseFloat(e.target.value) || 0)} className="w-full bg-zinc-800 border border-zinc-700 rounded px-2 h-8 text-center text-xs text-white focus:outline-none focus:border-blue-500 appearance-none font-mono" />
-          {suffix && <span className="absolute right-2 top-1/2 -translate-y-1/2 text-[10px] text-zinc-500 pointer-events-none">{suffix}</span>}
-        </div>
-        <button onClick={() => onChange(parseFloat((value + step).toFixed(2)))} className="w-8 h-8 flex items-center justify-center bg-zinc-800/80 border border-zinc-700/50 rounded hover:bg-zinc-700 text-zinc-400 transition-colors active:scale-90"><Plus size={14} /></button>
-      </div>
-    </div>
-  );
 
-  const InputField = ({ label, value, onChange, type = "number", step = "1", min, max }: any) => (
-    <div className="flex flex-col gap-1">
-      <label className="text-[10px] text-zinc-500 font-semibold tracking-wide">{label}</label>
-      <input
-        type={type} value={value} step={step} min={min} max={max}
-        onChange={(e) => { const val = type === "number" || type === "range" ? parseFloat(e.target.value) : e.target.value; onChange(val); }}
-        className="bg-zinc-800 border border-zinc-700 rounded px-2 py-1.5 text-xs text-white focus:outline-none focus:border-blue-500 font-mono"
-      />
-    </div>
-  );
 
   const activeFont = fonts.find(f => f.family === (selectedLayer as TextLayer)?.fontFamily) || fonts[7];
 
@@ -116,14 +347,14 @@ const PropertiesPanel: React.FC<Props> = ({
               </h3>
               <div className="space-y-4">
                 <div className="grid grid-cols-2 gap-x-4 gap-y-4">
-                  <InputField label="X" value={Math.round(selectedLayer.x)} onChange={(v: number) => handleLayerChange({ x: v })} />
-                  <InputField label="Y" value={Math.round(selectedLayer.y)} onChange={(v: number) => handleLayerChange({ y: v })} />
-                  <InputField label="Width" value={Math.round(selectedLayer.width)} onChange={(v: number) => handleLayerChange({ width: v })} />
-                  <InputField label="Height" value={Math.round(selectedLayer.height)} onChange={(v: number) => handleLayerChange({ height: v })} />
+                  <InputField label="X" value={Math.round(selectedLayer.x)} onChange={(v: number) => handleLayerChange({ x: v })} onAddKeyframe={() => onAddKeyframe?.(selectedLayer.id)} />
+                  <InputField label="Y" value={Math.round(selectedLayer.y)} onChange={(v: number) => handleLayerChange({ y: v })} onAddKeyframe={() => onAddKeyframe?.(selectedLayer.id)} />
+                  <InputField label="Width" value={Math.round(selectedLayer.width)} onChange={(v: number) => handleLayerChange({ width: v })} onAddKeyframe={() => onAddKeyframe?.(selectedLayer.id)} />
+                  <InputField label="Height" value={Math.round(selectedLayer.height)} onChange={(v: number) => handleLayerChange({ height: v })} onAddKeyframe={() => onAddKeyframe?.(selectedLayer.id)} />
                 </div>
                 <div className="mt-6 space-y-6">
-                  <SteppedInput label="Opacity" value={Math.round(selectedLayer.opacity * 100)} onChange={(v: number) => handleLayerChange({ opacity: Math.max(0, Math.min(100, v)) / 100 })} suffix="%" />
-                  <SteppedInput label="Rotation" value={Math.round(selectedLayer.rotation)} onChange={(v: number) => handleLayerChange({ rotation: v })} suffix="°" icon={RotateCcw} />
+                  <SteppedInput label="Opacity" value={Math.round(selectedLayer.opacity * 100)} onChange={(v: number) => handleLayerChange({ opacity: Math.max(0, Math.min(100, v)) / 100 })} suffix="%" onAddKeyframe={() => onAddKeyframe?.(selectedLayer.id)} />
+                  <SteppedInput label="Rotation" value={Math.round(selectedLayer.rotation)} onChange={(v: number) => handleLayerChange({ rotation: v })} suffix="°" icon={RotateCcw} onAddKeyframe={() => onAddKeyframe?.(selectedLayer.id)} />
 
                   <div className="flex flex-col gap-1.5 col-span-2">
                     <label className="text-[10px] text-zinc-500 font-semibold">Blend Mode</label>
@@ -188,7 +419,7 @@ const PropertiesPanel: React.FC<Props> = ({
                         <option value="100">Thin</option>
                       </select>
                     </div>
-                    <InputField label="Size" value={(selectedLayer as TextLayer).fontSize} onChange={(v: number) => handleLayerChange({ fontSize: v })} />
+                    <FontSizeInput value={(selectedLayer as TextLayer).fontSize} onChange={(v: number) => handleLayerChange({ fontSize: v })} />
                   </div>
                   <div className="flex flex-col gap-1.5">
                     <label className="text-[10px] text-zinc-500 font-semibold">Alignment</label>
@@ -215,7 +446,7 @@ const PropertiesPanel: React.FC<Props> = ({
               </section>
             )}
 
-            {(selectedLayer.type === LayerType.RECT || selectedLayer.type === LayerType.CIRCLE || selectedLayer.type === LayerType.POLYGON || selectedLayer.type === LayerType.TRIANGLE || selectedLayer.type === LayerType.STAR) && (
+            {(selectedLayer.type === LayerType.RECT || selectedLayer.type === LayerType.CIRCLE || selectedLayer.type === LayerType.POLYGON || selectedLayer.type === LayerType.TRIANGLE || selectedLayer.type === LayerType.STAR || selectedLayer.type === LayerType.ARROW || selectedLayer.type === LayerType.DIAMOND || selectedLayer.type === LayerType.HEART || selectedLayer.type === LayerType.TRAPEZOID) && (
               <section className="pt-6 border-t border-zinc-800/50">
                 <h3 className="text-[11px] font-bold text-zinc-500 tracking-wider mb-4 uppercase">Appearance</h3>
                 <div className="space-y-4">
@@ -312,6 +543,27 @@ const PropertiesPanel: React.FC<Props> = ({
           </>
         ) : (
           <div className="space-y-8 animate-in fade-in duration-500">
+            {/* AI CAPABILITIES */}
+            <section className="bg-gradient-to-br from-indigo-900/30 to-purple-900/30 border border-white/5 rounded-xl p-4 relative overflow-hidden group">
+              <div className="absolute inset-0 bg-gradient-to-r from-blue-500/10 via-purple-500/10 to-pink-500/10 opacity-0 group-hover:opacity-100 transition-opacity" />
+
+              <div className="flex items-center gap-2 mb-3 relative z-10">
+                <Sparkles size={14} className="text-pink-400 animate-pulse" />
+                <h3 className="text-xs font-bold text-white tracking-wider">Creative Partner</h3>
+              </div>
+
+              <button
+                onClick={onRemix}
+                className="w-full py-3 bg-gradient-to-r from-indigo-600 via-purple-600 to-pink-600 hover:from-indigo-500 hover:via-purple-500 hover:to-pink-500 text-white rounded-lg text-xs font-bold shadow-lg hover:shadow-purple-500/20 transition-all active:scale-[0.98] flex items-center justify-center gap-2 relative z-10 group/btn"
+              >
+                <Wand2 size={14} className="group-hover/btn:rotate-12 transition-transform" />
+                Remix Design
+              </button>
+              <p className="text-[9px] text-zinc-400 mt-2 text-center relative z-10">
+                Instantly shuffle layouts, colors, and fonts (Swiss & Bauhaus styles).
+              </p>
+            </section>
+
             <section>
               <div className="flex items-center gap-2 mb-4">
                 <Layout size={14} className="text-blue-500" />
@@ -361,7 +613,18 @@ const PropertiesPanel: React.FC<Props> = ({
         )}
       </div>
       <div className="mt-auto border-t border-zinc-800/50">
-        <LayersPanel layers={activePage?.layers || []} selectedLayerId={selectedLayer?.id || null} onSelect={onSelectLayer} onUpdateLayer={onUpdateLayer} onDuplicateLayer={onDuplicateLayer} onDeleteLayer={onDeleteLayer} onReorder={onReorderLayers} />
+        <LayersPanel
+          layers={activePage?.layers || []}
+          selectedLayerId={selectedLayer?.id || null}
+          onSelect={onSelectLayer}
+          onUpdateLayer={onUpdateLayer}
+          onDuplicateLayer={onDuplicateLayer}
+          onDeleteLayer={onDeleteLayer}
+          onReorder={onReorderLayers}
+          onMask={onMask}
+          onUnmask={onUnmask}
+          selectedLayerIds={selectedLayerIds}
+        />
       </div>
       <div className="p-5 border-t border-zinc-800/80 bg-[#0d0d0f] shadow-[0_-10px_20px_rgba(0,0,0,0.3)]">
         <h3 className="text-[9px] font-black text-zinc-600 tracking-wider mb-3">Live Scene State</h3>

@@ -77,7 +77,7 @@ const NewLandingPage: React.FC<NewLandingPageProps> = ({ onStartEditing, onBuyCr
             {/* Product Showcase */}
             <section id="features" className="relative z-10 px-8 py-24 max-w-7xl mx-auto">
                 <div className="text-center mb-16">
-                    <h2 className="text-[18px] md:text-4xl lg:text-5xl font-bold mb-4">Design on Canvas</h2>
+                    <h1 className="text-[18px] md:text-6xl lg:text-7xl font-bold mb-4">Design on Canvas</h1>
                     <p className="text-zinc-400 text-lg">
                         Layers · Scenes · Aspect Ratios · MP4 Export
                     </p>
@@ -157,7 +157,7 @@ const NewLandingPage: React.FC<NewLandingPageProps> = ({ onStartEditing, onBuyCr
             <section className="relative z-10 px-8 py-24 max-w-4xl mx-auto">
                 <div className="space-y-16">
                     <div>
-                        <h2 className="text-[18px] md:text-4xl lg:text-5xl font-bold mb-6">Why BatchoVideo?</h2>
+                        <h1 className="text-[18px] md:text-6xl lg:text-7xl font-bold mb-6">Why BatchoVideo?</h1>
                         <div className="space-y-6 text-zinc-300 text-lg leading-relaxed">
                             <p>
                                 Most video editors are built around timelines, tracks, and endless menus.
@@ -173,7 +173,7 @@ const NewLandingPage: React.FC<NewLandingPageProps> = ({ onStartEditing, onBuyCr
                     </div>
 
                     <div>
-                        <h2 className="text-[18px] md:text-4xl lg:text-5xl font-bold mb-6">Built for Creators</h2>
+                        <h1 className="text-[18px] md:text-6xl lg:text-7xl font-bold mb-6">Built for Creators</h1>
                         <div className="space-y-6 text-zinc-300 text-lg leading-relaxed">
                             <p>
                                 BatchoVideo is built for creators who care about layout, consistency, and speed.
@@ -191,7 +191,7 @@ const NewLandingPage: React.FC<NewLandingPageProps> = ({ onStartEditing, onBuyCr
 
             {/* Users/Testimonials Section */}
             <section className="relative z-10 px-8 py-24 max-w-7xl mx-auto">
-                <h2 className="text-[18px] md:text-4xl lg:text-5xl font-bold text-center mb-16">Users</h2>
+                <h1 className="text-[18px] md:text-6xl lg:text-7xl font-bold text-center mb-16">Users</h1>
                 <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-8">
                     {[
                         {
@@ -234,7 +234,7 @@ const NewLandingPage: React.FC<NewLandingPageProps> = ({ onStartEditing, onBuyCr
 
             {/* FAQs Section */}
             <section className="relative z-10 px-8 py-24 max-w-4xl mx-auto">
-                <h2 className="text-[18px] md:text-4xl lg:text-5xl font-bold text-center mb-16">FAQs</h2>
+                <h1 className="text-[18px] md:text-6xl lg:text-7xl font-bold text-center mb-16">FAQs</h1>
                 <div className="space-y-8">
                     {[
                         {
@@ -285,7 +285,7 @@ const NewLandingPage: React.FC<NewLandingPageProps> = ({ onStartEditing, onBuyCr
             {/* Pricing Section */}
             <section id="pricing" className="relative z-10 px-8 py-24 max-w-7xl mx-auto">
                 <div className="text-center mb-16">
-                    <h2 className="text-[18px] md:text-4xl lg:text-5xl font-bold mb-4">Simple, Transparent Pricing</h2>
+                    <h1 className="text-[18px] md:text-6xl lg:text-7xl font-bold mb-4">Simple, Transparent Pricing</h1>
                     <p className="text-zinc-400 text-lg">
                         No subscriptions. No expiring credits. Pay once, use anytime.
                     </p>

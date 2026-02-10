@@ -22,7 +22,7 @@ const NotFoundPage: React.FC = () => {
             <Navigation />
 
             <main className="flex-1 relative z-10 flex flex-col items-center justify-center p-8 text-center mt-[-100px]">
-                <h1 className="text-[120px] md:text-[200px] font-black text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-purple-600 leading-none">
+                <h1 className="text-[36px] max-[480px]:text-[18px] max-[480px]:leading-[1.2] font-black tracking-tight leading-none">
                     404
                 </h1>
                 <p className="text-xl md:text-2xl text-zinc-400 max-w-2xl mx-auto leading-relaxed mt-4">
