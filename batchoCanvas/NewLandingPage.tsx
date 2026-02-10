@@ -364,39 +364,39 @@ const NewLandingPage: React.FC<NewLandingPageProps> = ({ onStartEditing, onBuyCr
                     {[
                         {
                             question: "What is BatchoCanvas?",
-                            answer: "BatchoCanvas is a canvas-based video editor that lets you design videos visually using layers and scenes. You can overlay text and shapes on video, choose your canvas size, and export polished videos with ease.",
+                            answer: "BatchoCanvas is a freeform design canvas for creating both static and animated content. Design visually using layers and multiple canvases, animate elements with a built-in timeline, apply masking and blend modes, and export your work as images, videos, or PDFs.",
                         },
                         {
-                            question: "Do I need video editing experience to use it?",
-                            answer: "No. BatchoCanvas is designed to feel more like a design tool than a traditional video editor. If you can work with layers and pages, you can start creating immediately."
+                            question: "Do I need design or animation experience to use it?",
+                            answer: "No. BatchoCanvas is built to feel intuitive and approachable. If you’re comfortable working with layers and arranging elements on a canvas, you can start creating right away—no animation or video editing background required."
                         },
                         {
-                            question: "How does BatchoCanvas differ from timeline editors?",
-                            answer: "While BatchoCanvas includes a powerful timeline, you primarily design directly on a canvas. Videos, text, and shapes are layered visually, scenes act like pages, and layouts stay consistent across exports.",
+                            question: "How does BatchoCanvas differ from traditional editors?",
+                            answer: "Most tools force you to choose between static design and timeline-based editing. BatchoCanvas combines both. You design directly on a canvas, then use the timeline only when you want to animate elements—without disrupting your layout or workflow.",
                         },
                         {
-                            question: "Can I export in different aspect ratios?",
-                            answer: "Yes. You can choose from common aspect ratios like 16:9, 9:16, and 1:1—or set custom canvas sizes—and export videos optimized for social, web, or presentations."
+                            question: "Can I export in different formats and sizes?",
+                            answer: "Yes. BatchoCanvas supports common aspect ratios as well as custom canvas sizes. You can export each canvas as an image, video, or PDF, depending on how you plan to use it."
                         },
                         {
-                            question: "How are scenes used?",
-                            answer: "Scenes work like pages. Each scene can have its own layout and content, and you can export scenes individually or as part of a full video."
+                            question: "How do multiple canvases (scenes) work?",
+                            answer: "You can create multiple canvases within a single project. Each canvas acts like its own scene, making it easy to create variations, sequences, or different formats—then export each one individually or together."
                         },
                         {
                             question: "Are my projects saved?",
-                            answer: "Yes. Your projects are saved to your account so you can return, edit, and export whenever you need. You stay in full control of your content."
+                            answer: "Yes. All projects are saved to your account so you can return, edit, and export at any time. Your work stays organized and accessible."
                         },
                         {
-                            question: "What types of videos is BatchoCanvas best for?",
-                            answer: "BatchoCanvas works especially well for social content, marketing videos, presentations, tutorials, product demos, and branded layouts that need consistent design."
+                            question: "What types of content is BatchoCanvas best for?",
+                            answer: "BatchoCanvas works well for social media content, posters, animated graphics, short videos, presentations, storyboards, and other visual assets—whether static or animated."
                         },
                         {
-                            question: "Is BatchoCanvas still improving?",
-                            answer: "Yes. BatchoCanvas is actively developed, with regular updates focused on performance, usability, and new creative capabilities."
+                            question: "Is BatchoCanvas still evolving?",
+                            answer: "Yes. BatchoCanvas is actively developed, with ongoing updates focused on performance, usability, and expanding creative capabilities."
                         },
                         {
-                            question: "How many videos can I create?",
-                            answer: "That depends on your plan. You can start for free to explore the editor, and upgrade for higher limits and expanded export options."
+                            question: "How much can I create?",
+                            answer: "That depends on your plan. You can start for free to explore BatchoCanvas, with options to upgrade for higher limits and additional export capabilities."
                         }
                     ].map((faq, idx) => (
                         <div key={idx} className="space-y-3">
