@@ -73,7 +73,7 @@ const NewLandingPage: React.FC<NewLandingPageProps> = ({ onStartEditing, onBuyCr
             {/* Product Showcase */}
             <section id="features" className="relative z-10 px-8 py-24 max-w-7xl mx-auto">
                 <div className="text-center mb-16">
-                    <h1 className="text-[36px] max-[480px]:text-[18px] max-[480px]:leading-[1.2] font-black mb-4">Design on Canvas</h1>
+                    <h1 className="text-[36px] max-[480px]:text-[18px] max-[480px]:leading-[1.2] font-black mb-4">Freeform Design on Canvas</h1>
                     <p className="text-zinc-400 text-lg">
                         Animate. Layers · Scenes · Aspect Ratios · Video Export
                     </p>
